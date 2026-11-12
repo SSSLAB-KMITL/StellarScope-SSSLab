@@ -1,0 +1,16 @@
+[package]
+name = "orbitscope-desktop"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "OrbitScope 2.0 Tauri v2 Desktop Application (STK-style 2D/3D Satellite & EO Simulator)"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+orbitscope-core.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2", features = [] }

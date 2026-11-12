@@ -4,6 +4,7 @@
 //! validated against other tools, and reused from a CLI, Python (PyO3) or WASM.
 
 pub mod access;
+pub mod catalog;
 pub mod frames;
 pub mod math;
 pub mod orbit;

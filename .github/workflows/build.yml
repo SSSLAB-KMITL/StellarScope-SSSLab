@@ -1,7 +1,6 @@
 name: build
 
-# Builds Windows (.zip with .exe) and macOS (universal .app in a .zip).
-# Run manually from the Actions tab, or push a tag like v0.1.0 to also publish a GitHub Release.
+# Builds Windows (.exe) and macOS (universal .app) for OrbitScope 2.0 (Tauri v2 + CesiumJS + Rust Core).
 on:
   workflow_dispatch:
   push:
@@ -17,8 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - uses: Swatinem/rust-cache@v2
       - run: cargo test -p orbitscope-core
+      - run: npm --prefix ui install && npm --prefix ui run build
 
   windows:
     needs: test
@@ -26,13 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release -p orbitscope
+      - run: npm --prefix ui install && npm --prefix ui run build
+      - run: cargo build --release -p orbitscope-desktop
       - name: Package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item target/release/orbitscope.exe dist/OrbitScope.exe
+          Copy-Item target/release/orbitscope-desktop.exe dist/OrbitScope.exe
           Compress-Archive -Path dist/OrbitScope.exe -DestinationPath OrbitScope-windows-x64.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -47,19 +54,22 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release -p orbitscope --target aarch64-apple-darwin
-      - run: cargo build --release -p orbitscope --target x86_64-apple-darwin
+      - run: npm --prefix ui install && npm --prefix ui run build
+      - run: cargo build --release -p orbitscope-desktop --target aarch64-apple-darwin
+      - run: cargo build --release -p orbitscope-desktop --target x86_64-apple-darwin
       - name: Package universal .app
         run: |
           APP=OrbitScope.app
           mkdir -p $APP/Contents/MacOS
           lipo -create \
-            target/aarch64-apple-darwin/release/orbitscope \
-            target/x86_64-apple-darwin/release/orbitscope \
+            target/aarch64-apple-darwin/release/orbitscope-desktop \
+            target/x86_64-apple-darwin/release/orbitscope-desktop \
             -output $APP/Contents/MacOS/orbitscope
           cp packaging/macos/Info.plist $APP/Contents/Info.plist
-          # ad-hoc signature so Apple Silicon will launch it (still "unidentified developer")
           codesign --force --deep --sign - $APP
           ditto -c -k --keepParent $APP OrbitScope-macos-universal.zip
       - uses: actions/upload-artifact@v4

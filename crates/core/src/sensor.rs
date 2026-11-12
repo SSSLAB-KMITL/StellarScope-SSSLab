@@ -10,8 +10,10 @@
 use crate::frames::{ray_ellipsoid, surface_distance};
 use crate::math::V3;
 use crate::orbit::State;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum Fov {
     /// Circular cone with the given half-angle [deg]
     Conic { half_angle_deg: f64 },
@@ -19,7 +21,7 @@ pub enum Fov {
     Rectangular { cross_half_deg: f64, along_half_deg: f64 },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Sensor {
     pub fov: Fov,
     /// Off-nadir roll (cross-track) [deg]
@@ -133,6 +135,28 @@ pub fn off_nadir_angle(s: &State, target: V3) -> f64 {
     (-s.r).angle(target - s.r).to_degrees()
 }
 
+/// Compute exact (roll_deg, pitch_deg) required to point the sensor boresight
+/// from satellite state `s` at `target` (both in the same frame, e.g. TEME),
+/// returning `None` if the off-nadir angle exceeds `max_slew_deg` or if the
+/// target is behind the local nadir hemisphere.
+pub fn slew_angles_to_target(s: &State, target: V3, max_slew_deg: f64) -> Option<(f64, f64)> {
+    let off = off_nadir_angle(s, target);
+    if off > max_slew_deg {
+        return None;
+    }
+    let axes = body_axes(s);
+    let u = (target - s.r).normalize();
+    let bx = u.dot(axes.x);
+    let by = u.dot(axes.y);
+    let bz = u.dot(axes.z);
+    if bz <= 0.0 {
+        return None;
+    }
+    let roll_deg = by.clamp(-1.0, 1.0).asin().to_degrees();
+    let pitch_deg = bx.atan2(bz).to_degrees();
+    Some((roll_deg, pitch_deg))
+}
+
 /// Ground sample distance [m] for a camera with focal length `focal_mm` and
 /// detector pixel pitch `pixel_um`, at slant range `range_km`.
 pub fn gsd_m(range_km: f64, focal_mm: f64, pixel_um: f64) -> f64 {
@@ -198,5 +222,17 @@ mod tests {
         // 786 km, f=600 mm, 7.5 µm pixel -> ~9.8 m
         let g = gsd_m(786.0, 600.0, 7.5);
         assert!((g - 9.825).abs() < 0.01);
+    }
+
+    #[test]
+    fn slew_to_target_points_boresight_at_target() {
+        let s = equator_state(650.0);
+        let target = Geodetic::new(1.5, 2.2, 0.0).to_ecef();
+        let (roll_deg, pitch_deg) = slew_angles_to_target(&s, target, 45.0).unwrap();
+        let sensor = Sensor { roll_deg, pitch_deg, ..Sensor::default() };
+        let hit = sensor.boresight_ground(&s).unwrap();
+        let hit_geo = Geodetic::from_ecef(hit);
+        assert!((hit_geo.lat - 1.5).abs() < 1e-4, "lat={}", hit_geo.lat);
+        assert!((hit_geo.lon - 2.2).abs() < 1e-4, "lon={}", hit_geo.lon);
     }
 }

@@ -1,8 +1,9 @@
 //! Minimal f64 3-vector used by the core (kept dependency-free on purpose).
 
+use serde::{Deserialize, Serialize};
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 pub struct V3 {
     pub x: f64,
     pub y: f64,

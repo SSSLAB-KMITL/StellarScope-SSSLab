@@ -1,109 +1,77 @@
-# OrbitScope
+# OrbitScope 2.0 (STK-Style 2D/3D Satellite Tracking & Earth Observation Simulator)
 
-โปรแกรมจำลองวงโคจรดาวเทียมและการถ่ายภาพแบบ 3D สไตล์ STK เขียนด้วย Rust (Bevy + egui) รองรับ **macOS และ Windows**
+ซอฟต์แวร์จำลองวงโคจรดาวเทียมและการวางแผนถ่ายภาพสำรวจโลกแบบ **2D / 3D สไตล์ Ansys STK** พัฒนาด้วยสถาปัตยกรรม **Tauri v2 (Rust Core) + CesiumJS + React/TypeScript** รองรับทั้ง **Windows** และ **macOS** ออกแบบมาเพื่อใช้เป็นทั้งเครื่องมือวิเคราะห์ภารกิจและ**สื่อการเรียนการสอนด้านวิศวกรรมอวกาศ**
 
-![OrbitScope](docs/screenshot.png)
+---
 
-![Sensor and swath](docs/screenshot-sensor.png)
+## ฟีเจอร์หลักใน OrbitScope 2.0
 
-## ทำอะไรได้ตอนนี้ (MVP)
+### 1. ระบบติดตามดาวเทียมแบบคู่ขนาน 3D Globe + 2D Map
+- **ลูกโลก 3D (CesiumJS WGS84)**: แสดงชั้นบรรยากาศ, แสงอาทิตย์ตามเวลาจริง (Day/Night Terminator), เส้นวงโคจร 3D, เส้น Nadir, และโหมดกล้องเกาะติดดาวเทียม
+- **แผนที่ 2D (Synchronized Tactical Map)**: แสดงเส้นทางดาวเทียมบนพื้นโลก (Ground Track), ขอบเขตการมองเห็นของสถานีภาคพื้นดิน, และเส้นแบ่งกลางวัน-กลางคืน
+- **ระบบแผนที่ Hybrid (Offline-first + High-Res Online)**:
+  - มีแผนที่โลก Blue Marble ฝังในตัวโปรแกรม เปิดใช้งานได้ทันทีแม้ไม่มีอินเทอร์เน็ตหรือ API Key
+  - เมื่อเชื่อมต่ออินเทอร์เน็ต จะโหลดภาพถ่ายดาวเทียมความละเอียดสูง (Esri World Imagery / OpenStreetMap) อัตโนมัติ
 
-- โลก 3D ทรงรี WGS84 หมุนตามเวลาจริง (GMST) พร้อมแสงกลางวัน/กลางคืนตามตำแหน่งดวงอาทิตย์
-- ดาวเทียมจาก **TLE** (วางได้หลายดวง) หรือจาก **ค่าวงโคจร** (มีตัวช่วยคำนวณ sun-synchronous + เวลาผ่านเส้นศูนย์สูตร)
-- เส้นวงโคจร, ground track (ย้อนหลัง/ล่วงหน้า 1 รอบ), เส้น nadir
-- **เซนเซอร์ถ่ายภาพ**: FOV สี่เหลี่ยม/กรวย, roll/pitch, กรวยโปร่งแสง, footprint บนพื้น, แถบ **swath** ที่กวาดผ่านมา
-- คำนวณ **ความกว้าง swath**, จุดเล็ง, off-nadir, **GSD** จากความยาวโฟกัส/ขนาดพิกเซล, มุมแสงอาทิตย์ที่จุดเล็ง
-- สถานีภาคพื้นดิน (เส้นติดต่อเมื่อมองเห็น, ตาราง Az/El) และเป้าหมายถ่ายภาพ
-- **รายงาน Access**: ช่วงติดต่อสถานี (มุมเงยสูงสุด) + ช่วงที่ถ่ายเป้าหมายได้ (จำกัด off-nadir และมุมแสงอาทิตย์) กด “ไปที่เวลา” ได้ และคัดลอกเป็น CSV
-- ควบคุมเวลา: เล่น/หยุด/ย้อนหลัง, ความเร็ว x1–x3600, แถบเลื่อนเวลา
-- กล้องหมุนรอบโลก/ตามดาวเทียม, โหมดหมุนตามโลก
-- UI ภาษาไทย (ฟอนต์ Sarabun ฝังในโปรแกรม) ไฟล์ภาพและฟอนต์ฝังอยู่ใน binary ไฟล์เดียว
+### 2. การจำลองดาวเทียมถ่ายภาพสำรวจโลก (Earth Observation Simulation)
+- **3D Sensor Cone, Footprint & Swath**: วาดกรวยมุมมองเซนเซอร์ 3D (ทั้งแบบสี่เหลี่ยม Pushbroom และแบบกรวยกลม Conic), กรอบพื้นที่ตกกระทบพื้นโลก (Footprint), และแถบพื้นที่ที่ถ่ายผ่านมาแล้ว (Swath)
+- **หน้าต่างภาพจากมุมมองกล้องดาวเทียม (Simulated Sensor / Payload PiP View)**:
+  - หน้าต่างย่อยแสดงภาพพื้นโลกจริงจากตำแหน่งและมุมเอียง (Roll/Pitch) ของกล้องดาวเทียมแบบเรียลไทม์
+  - แสดงเส้นเล็ง (Crosshair Reticle), ค่าความละเอียดภาพ **GSD (เมตร/พิกเซล)**, มุม **Off-Nadir (°)**, และปุ่ม **📸 ถ่ายภาพจำลอง (Capture PNG)**
+- **ระบบหันกล้องเล็งเป้าหมายอัตโนมัติ (Auto Target Tracking / Roll-Pitch Slew)**:
+  - เลือกโหมด **Auto Target Tracking** เพื่อให้ดาวเทียมเอียงตัวหันกล้องล็อกเป้าหมายบนพื้นโลกอัตโนมัติเมื่อบินเข้าสู่ระยะทำการ
+- **พื้นที่เป้าหมายแบบหลายเหลี่ยม (Area Target & Multi-Pass Coverage)**:
+  - คลิกวาดกรอบพื้นที่หลายเหลี่ยมบนแผนที่ และคำนวณเปอร์เซ็นต์ความครอบคลุมของการถ่ายภาพ (**% Coverage**) แยกตามกริดย่อย
 
-> ดาวเทียมตัวอย่าง (EO-1, EO-2, SAR-1, STATION) สร้างจากค่าวงโคจร ณ เวลาที่เปิดโปรแกรม **ไม่ใช่ดาวเทียมจริง** ใช้ปุ่ม **+ TLE** เพื่อใส่ดาวเทียมจริงจาก [CelesTrak](https://celestrak.org/NORAD/elements/)
+### 3. ฟีเจอร์สื่อการเรียนการสอน (Educational & Visualization Tools)
+- **3D Coordinate Axes & Vector Geometry (VGT Lite)**:
+  - เปิด/ปิดลูกศรแกนพิกัดเฉื่อย **ECI** (ชี้จุดวสันตวิษุวัต ♈) เทียบกับแกนหมุนตามโลก **ECEF** (0° Greenwich)
+  - แสดงเวกเตอร์ประจำตัวดาวเทียม: **Velocity ($V$)**, **Nadir**, **Orbit Normal ($H$)**, และ **Sun Vector**
+  - แสดงแผ่นระนาบวงโคจร 3D กึ่งโปร่งแสงพร้อมป้ายมุม **Inclination ($i$)** และ **RAAN ($\Omega$)**
+- **Interactive Keplerian Sandbox & Orbit Presets**:
+  - ลากแถบเลื่อนปรับค่าพารามิเตอร์วงโคจร ($h, e, i, \Omega, \omega, M$) แล้วเห็นเส้นวงโคจร 3D และ Ground Track 2D เปลี่ยนรูปร่างทันที
+  - ปุ่มคำนวณวงโคจรสัมพันธ์กับดวงอาทิตย์ (**Sun-Synchronous Orbit: SSO**) อัตโนมัติ และชุด **Orbit Presets** (SSO 10:30, LEO ISS, Dawn-Dusk SAR, GEO ค้างฟ้า, Molniya)
+- **คลังดาวเทียมจริง CelesTrak + Offline Catalog**:
+  - มีดาวเทียมจริงฝังในเครื่อง (`THEOS-2`, `THEOS-1`, `SENTINEL-2A`, `SENTINEL-1A SAR`, `LANDSAT 9`, `ISS`, `NOAA-20`) และค้นหาดาวเทียมออนไลน์จาก CelesTrak ได้โดยตรง
+- **แถบเวลา STK Gantt Timeline & รายงาน Access**:
+  - แถบเวลาด้านล่างแสดงแถบสี (Gantt Bars) ของช่วงติดต่อสถานีและช่วงถ่ายภาพเป้าหมาย คลิกที่แถบสีเพื่อกระโดดไปดูจังหวะถ่ายภาพได้ทันที และส่งออกเป็น CSV ได้
 
-## วิธีรัน
+---
 
-### 1. ติดตั้ง Rust
-- **macOS**: `xcode-select --install` แล้วติดตั้ง Rust จาก <https://rustup.rs>
-- **Windows**: ติดตั้ง [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (เลือก “Desktop development with C++”) แล้วติดตั้ง Rust จาก <https://rustup.rs>
+## วิธีรันโปรแกรม
 
-### 2. Build และรัน
+### 1. รันโหมดพัฒนาผ่าน Vite + Browser หรือ Tauri Desktop
 ```bash
-cargo run --release -p orbitscope
+# ติดตั้งแพ็กเกจ UI (ครั้งแรกครั้งเดียว)
+cd ui && npm install
+
+# รันเซิร์ฟเวอร์พัฒนา (เปิดได้ที่ http://localhost:1420)
+npm run dev
 ```
-ครั้งแรกจะ compile Bevy นานหน่อย (ประมาณ 3–10 นาทีตามเครื่อง) ครั้งต่อไปจะเร็วขึ้นมาก
 
-ระหว่างพัฒนาใช้ `cargo run -p orbitscope` ก็ได้ (โปรไฟล์ dev ตั้งให้ optimize dependency ไว้แล้ว)
+หรือรันเป็นหน้าต่างโปรแกรม **Native Desktop (macOS / Windows)** ด้วย Tauri v2:
+```bash
+# สร้างไฟล์ UI และเปิดหน้าต่างโปรแกรม Native Desktop
+npm --prefix ui run build
+PATH="/opt/homebrew/opt/rustup/bin:$PATH" cargo run -p orbitscope-desktop
+```
 
-### 3. ทดสอบส่วนคำนวณ
+### 2. รันชุดทดสอบโมดูลคำนวณดาราศาสตร์ (`orbitscope-core`)
 ```bash
 cargo test -p orbitscope-core
 ```
 
-### ถ่ายภาพหน้าจออัตโนมัติ (ไม่เปิดหน้าต่าง)
-```bash
-ORBITSCOPE_SCREENSHOT=shot.png cargo run -p orbitscope
-# ตัวเลือกเสริม: ORBITSCOPE_LOOKAT=13.7,100.5  ORBITSCOPE_DIST=17000  ORBITSCOPE_FOCUS=0  ORBITSCOPE_REPORT=1
-```
-บน Linux ที่ไม่มีไดรเวอร์ Vulkan ให้เพิ่ม `--features gles` และตั้ง `WGPU_BACKEND=gl EGL_PLATFORM=surfaceless`
+---
 
-### Build ไฟล์แจกจ่าย (ไม่ต้องมีเครื่อง Mac/Windows ครบ)
-push โปรเจกต์ขึ้น GitHub แล้วไปที่แท็บ **Actions → build → Run workflow** จะได้
-- `OrbitScope-windows-x64.zip` (มี `OrbitScope.exe`)
-- `OrbitScope-macos-universal.zip` (มี `OrbitScope.app` รันได้ทั้ง Apple Silicon และ Intel)
-
-ถ้า push tag เช่น `v0.1.0` จะสร้าง GitHub Release ให้อัตโนมัติ
-
-> macOS: แอปยังไม่ได้ sign ด้วย Apple Developer ID ครั้งแรกให้คลิกขวา → Open (หรือ System Settings → Privacy & Security → Open Anyway)
-> Windows: SmartScreen อาจเตือน ให้กด More info → Run anyway
-
-## การใช้งาน
-
-| การกระทำ | ผล |
-|---|---|
-| ลากเมาส์ | หมุนกล้อง |
-| ล้อเมาส์ | ซูม |
-| ดับเบิลคลิกชื่อดาวเทียม / ปุ่ม 🎥 | กล้องตามดาวเทียม |
-| Esc | กลับมามองโลก |
-| แผงซ้าย | รายการวัตถุ, เพิ่ม TLE / วงโคจร / จุดบนพื้น |
-| แผงขวา | คุณสมบัติ, ค่าเซนเซอร์, ค่าที่คำนวณได้ |
-| แผงล่าง | แถบเวลา + รายงาน Access |
-
-## โครงสร้างโค้ด
-
+## โครงสร้างโปรเจกต์
 ```
 crates/
-  core/   คำนวณล้วน ไม่มี UI (ทดสอบได้, เอาไปทำ CLI / Python / WASM ต่อได้)
-    time.rs     Julian date, GMST
-    frames.rs   TEME ↔ ECEF, WGS84 geodetic, az/el, ray–ellipsoid
-    orbit.rs    SGP4 (TLE + Keplerian), sun-synchronous helpers
-    sensor.rs   FOV, roll/pitch, footprint, swath, GSD
-    sun.rs      ตำแหน่งดวงอาทิตย์, มุมแสง, เงาโลก
-    access.rs   หาช่วงเวลา (bisection), pass สถานี, โอกาสถ่ายภาพ
-  app/    Bevy + egui
-    scene.rs    โลก, กล้อง, ดาวเทียม, gizmo เส้น, mesh กรวย/swath
-    ui.rs       แผงควบคุม, dialog, รายงาน, ป้ายชื่อ
-    scenario.rs สถานะฉาก + ฉากตัวอย่าง
-assets/   earth.png (สร้างจาก Natural Earth), ฟอนต์ Sarabun
+  core/       เอนจินคำนวณดาราศาสตร์ภาษา Rust (SGP4, Keplerian+J2, WGS84, Sensor Slew, Access, Area Coverage)
+  desktop/    Tauri v2 Native Desktop App (เชื่อม Rust Core เข้ากับ UI สำหรับ Windows/macOS)
+  app/        (Legacy MVP) รุ่นจำลองด้วย Bevy + egui ดั้งเดิม
+ui/           Frontend สไตล์ STK (React + TypeScript + CesiumJS + Tailwind CSS)
+  src/
+    engine/       ตัวคำนวณ 60fps Isomorphic + คลังดาวเทียม CelesTrak / Presets
+    components/   Cesium 3D Globe, 2D Tactical Map, Sensor Camera PiP, STK Gantt Timeline Bar
+assets/       แผนที่โลก Natural Earth แบบ Offline และฟอนต์ภาษาไทย
 ```
-
-**หน่วยและกรอบอ้างอิง**: ฉาก 3D อยู่ในกรอบ TEME (ผลลัพธ์ของ SGP4) หน่วย km; core ใช้แกน Z ขึ้น ส่วน Bevy ใช้แกน Y ขึ้น (`to_bevy()` แปลงให้)
-
-**ความแม่นยำ**: SGP4 + TEME→ECEF ด้วย GMST (ไม่รวม polar motion ~10 m) และใช้ UTC แทน UT1 (ต่างกัน < 1 วินาที) เพียงพอสำหรับ visualization และวางแผนถ่ายภาพระดับกิโลเมตร
-
-## แผนต่อไป
-
-1. บันทึก/เปิดไฟล์ฉาก (serde + RON/JSON) และเปิดไฟล์ TLE จากดิสก์
-2. ดึง TLE จาก CelesTrak ในโปรแกรม (ตาม NORAD ID / กลุ่ม)
-3. Coverage grid + revisit time และหลายดาวเทียม (constellation / Walker)
-4. มุมมองจากกล้องดาวเทียม (render ภาพจำลองที่กล้องเห็น) + ภาพพื้นโลกความละเอียดสูงแบบ tile
-5. Numerical propagator (J2/drag) ผ่าน ANISE/hifitime เมื่อต้องการความแม่นยำสูง
-6. Floating origin (`big_space`) สำหรับซูมใกล้ระดับเมตร
-
-## ข้อมูลและไลเซนส์ของบุคคลที่สาม
-
-- ภาพพื้นโลก: สร้างจาก [Natural Earth](https://www.naturalearthdata.com/) (public domain) ด้วยสคริปต์ `tools/earth_tex.py`
-- ฟอนต์ Sarabun: SIL Open Font License 1.1 (`assets/OFL-Sarabun.txt`)
-- ไลบรารี Rust: Bevy, egui, bevy_egui (MIT/Apache-2.0), sgp4 (MIT), chrono (MIT/Apache-2.0)
-
-ตัวโปรเจกต์เองยังไม่ได้กำหนดไลเซนส์ — เลือกเองได้ตามรูปแบบที่จะใช้งาน (เปิดซอร์สหรือขายเชิงพาณิชย์)

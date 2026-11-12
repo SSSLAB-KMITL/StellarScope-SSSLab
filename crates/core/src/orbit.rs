@@ -3,8 +3,9 @@
 use crate::frames::{teme_to_ecef, Geodetic, J2, MU_EARTH, WGS84_A};
 use crate::math::V3;
 use crate::time::Epoch;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct State {
     /// Position, TEME [km]
     pub r: V3,
@@ -29,7 +30,7 @@ impl std::fmt::Display for OrbitError {
 impl std::error::Error for OrbitError {}
 
 /// Classical orbital elements used by the "orbit wizard".
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Keplerian {
     /// Altitude of a circular orbit above the equatorial radius [km] (semi-major axis - Re)
     pub altitude_km: f64,

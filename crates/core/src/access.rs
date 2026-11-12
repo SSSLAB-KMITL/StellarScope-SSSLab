@@ -2,9 +2,10 @@
 
 use crate::frames::{ecef_to_teme, look_angles, teme_to_ecef, Geodetic};
 use crate::orbit::Satellite;
-use crate::sensor::off_nadir_angle;
+use crate::sensor::{body_axes, off_nadir_angle, Fov, Sensor};
 use crate::sun::sun_elevation;
 use crate::time::{add_secs, secs_between, Epoch};
+use serde::{Deserialize, Serialize};
 
 /// Generic interval finder: samples `f` every `step_s` and refines each
 /// transition to ~0.5 s by bisection.
@@ -49,7 +50,7 @@ pub fn find_intervals(start: Epoch, end: Epoch, step_s: f64, f: impl Fn(Epoch) -
     out
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pass {
     pub start: Epoch,
     pub end: Epoch,
@@ -88,7 +89,7 @@ pub fn station_passes(sat: &Satellite, site: Geodetic, min_el_deg: f64, start: E
         .collect()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImagingWindow {
     pub start: Epoch,
     pub end: Epoch,
@@ -138,6 +139,167 @@ pub fn imaging_opportunities(
         ImagingWindow { start: a, end: b, min_off_nadir_deg: best, best_time: best_t, sun_el_deg: sun_elevation(target, best_t) }
     })
     .collect()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GridCellCoverage {
+    pub lat: f64,
+    pub lon: f64,
+    pub covered: bool,
+    pub hit_count: u32,
+    pub first_hit_epoch: Option<Epoch>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AreaCoverageResult {
+    pub total_cells: usize,
+    pub covered_cells: usize,
+    pub coverage_percent: f64,
+    pub cells: Vec<GridCellCoverage>,
+}
+
+/// Ray-casting point-in-polygon check on (lat, lon).
+fn point_in_polygon(lat: f64, lon: f64, poly: &[(f64, f64)]) -> bool {
+    if poly.len() < 3 {
+        return false;
+    }
+    let mut inside = false;
+    let mut j = poly.len() - 1;
+    for i in 0..poly.len() {
+        let (yi, xi) = poly[i];
+        let (yj, xj) = poly[j];
+        let intersect = ((yi > lat) != (yj > lat))
+            && (lon < (xj - xi) * (lat - yi) / ((yj - yi) + 1e-15) + xi);
+        if intersect {
+            inside = !inside;
+        }
+        j = i;
+    }
+    inside
+}
+
+/// Compute multi-pass coverage of a polygon area target `polygon_lat_lon`
+/// by a satellite + sensor between `start` and `end`.
+pub fn area_target_coverage(
+    sat: &Satellite,
+    sensor: &Sensor,
+    polygon_lat_lon: &[(f64, f64)],
+    grid_res_deg: f64,
+    min_sun_el_deg: f64,
+    start: Epoch,
+    end: Epoch,
+) -> AreaCoverageResult {
+    if polygon_lat_lon.len() < 3 {
+        return AreaCoverageResult {
+            total_cells: 0,
+            covered_cells: 0,
+            coverage_percent: 0.0,
+            cells: Vec::new(),
+        };
+    }
+    let min_lat = polygon_lat_lon.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+    let max_lat = polygon_lat_lon.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
+    let min_lon = polygon_lat_lon.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+    let max_lon = polygon_lat_lon.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max);
+
+    let step = grid_res_deg.max(0.1);
+    let mut cells = Vec::new();
+    let mut lat = min_lat + step * 0.5;
+    while lat <= max_lat {
+        let mut lon = min_lon + step * 0.5;
+        while lon <= max_lon {
+            if point_in_polygon(lat, lon, polygon_lat_lon) {
+                cells.push(GridCellCoverage {
+                    lat,
+                    lon,
+                    covered: false,
+                    hit_count: 0,
+                    first_hit_epoch: None,
+                });
+            }
+            lon += step;
+        }
+        lat += step;
+    }
+    // Fallback to vertices + centroid if polygon is smaller than grid step
+    if cells.is_empty() {
+        let c_lat = polygon_lat_lon.iter().map(|p| p.0).sum::<f64>() / polygon_lat_lon.len() as f64;
+        let c_lon = polygon_lat_lon.iter().map(|p| p.1).sum::<f64>() / polygon_lat_lon.len() as f64;
+        cells.push(GridCellCoverage {
+            lat: c_lat,
+            lon: c_lon,
+            covered: false,
+            hit_count: 0,
+            first_hit_epoch: None,
+        });
+    }
+
+    let cell_ecefs: Vec<_> = cells
+        .iter()
+        .map(|c| (Geodetic::new(c.lat, c.lon, 0.0), Geodetic::new(c.lat, c.lon, 0.0).to_ecef()))
+        .collect();
+
+    let cross_half_rad = match sensor.fov {
+        Fov::Conic { half_angle_deg } => half_angle_deg.to_radians(),
+        Fov::Rectangular { cross_half_deg, .. } => cross_half_deg.to_radians(),
+    };
+    let along_half_rad = match sensor.fov {
+        Fov::Conic { half_angle_deg } => half_angle_deg.to_radians().max(0.035),
+        Fov::Rectangular { along_half_deg, .. } => along_half_deg.to_radians().max(0.035),
+    };
+    let roll_rad = sensor.roll_deg.to_radians();
+    let pitch_rad = sensor.pitch_deg.to_radians();
+
+    let total_s = secs_between(start, end);
+    let dt = 8.0; // 8-second sampling step
+    let mut s_sec = 0.0;
+    while s_sec <= total_s {
+        let t = add_secs(start, s_sec);
+        if let Some(st) = sat.state(t) {
+            let axes = body_axes(&st);
+            for (idx, (geo, ecef)) in cell_ecefs.iter().enumerate() {
+                if sun_elevation(*geo, t) < min_sun_el_deg {
+                    continue;
+                }
+                let tgt_teme = ecef_to_teme(*ecef, t);
+                let u = (tgt_teme - st.r).normalize();
+                let bz = u.dot(axes.z);
+                if bz <= 0.15 {
+                    continue;
+                }
+                let bx = u.dot(axes.x);
+                let by = u.dot(axes.y);
+                let tgt_roll = by.clamp(-1.0, 1.0).asin();
+                let tgt_pitch = bx.atan2(bz);
+                if (tgt_roll - roll_rad).abs() <= cross_half_rad
+                    && (tgt_pitch - pitch_rad).abs() <= along_half_rad
+                {
+                    let c = &mut cells[idx];
+                    c.covered = true;
+                    c.hit_count += 1;
+                    if c.first_hit_epoch.is_none() {
+                        c.first_hit_epoch = Some(t);
+                    }
+                }
+            }
+        }
+        s_sec += dt;
+    }
+
+    let covered_cells = cells.iter().filter(|c| c.covered).count();
+    let total_cells = cells.len();
+    let coverage_percent = if total_cells > 0 {
+        (covered_cells as f64 / total_cells as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    AreaCoverageResult {
+        total_cells,
+        covered_cells,
+        coverage_percent,
+        cells,
+    }
 }
 
 #[cfg(test)]

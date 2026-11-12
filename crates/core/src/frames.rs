@@ -6,6 +6,7 @@
 
 use crate::math::V3;
 use crate::time::{gmst, Epoch};
+use serde::{Deserialize, Serialize};
 
 /// WGS84 semi-major axis [km]
 pub const WGS84_A: f64 = 6378.137;
@@ -31,7 +32,7 @@ pub fn ecef_to_teme(r: V3, t: Epoch) -> V3 {
 }
 
 /// Geodetic coordinates (WGS84).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Geodetic {
     /// Latitude [deg]
     pub lat: f64,
@@ -88,7 +89,7 @@ impl Geodetic {
 }
 
 /// Azimuth / elevation / range of `target_ecef` seen from `site`.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Look {
     pub az_deg: f64,
     pub el_deg: f64,

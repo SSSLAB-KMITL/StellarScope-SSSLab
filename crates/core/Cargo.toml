@@ -8,3 +8,4 @@ description = "Orbit propagation, frames, sensor footprint and access computatio
 [dependencies]
 sgp4.workspace = true
 chrono.workspace = true
+serde.workspace = true

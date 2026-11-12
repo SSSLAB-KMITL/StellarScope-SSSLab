@@ -1,5 +1,33 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ArrowDownToLine,
+  Camera,
+  Check,
+  Compass,
+  Crosshair,
+  FastForward,
+  GraduationCap,
+  Layers,
+  Lightbulb,
+  Moon,
+  Orbit,
+  Pause,
+  Pentagon,
+  Play,
+  Plus,
+  Radio,
+  Rewind,
+  RotateCcw,
+  Ruler,
+  Satellite,
+  Search,
+  SkipBack,
+  Sliders,
+  Sun,
+  Upload,
+  X,
+} from 'lucide-react';
+import {
   AreaCoverageSummary,
   CatalogEntry,
   computeAreaCoverage,
@@ -127,7 +155,7 @@ export const App: React.FC = () => {
             lat: Number(lat.toFixed(4)),
             lon: Number(lon.toFixed(4)),
             alt_km: 0,
-            color: '#f97316',
+            color: '#ea580c',
           },
         ]);
         setMapClickMode('none');
@@ -142,7 +170,7 @@ export const App: React.FC = () => {
             lon: Number(lon.toFixed(4)),
             alt_km: 0.05,
             min_el_deg: 5.0,
-            color: '#34d399',
+            color: '#059669',
           },
         ]);
         setMapClickMode('none');
@@ -160,7 +188,7 @@ export const App: React.FC = () => {
   );
 
   const handleAddFromCatalog = (entry: CatalogEntry) => {
-    const palette = ['#38bdf8', '#4ade80', '#facc15', '#fb7185', '#c084fc', '#2dd4bf'];
+    const palette = ['#0284c7', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0d9488'];
     const color = palette[satellites.length % palette.length];
     const newSat: SatelliteObject = {
       id: `sat-${entry.id}-${Date.now()}`,
@@ -230,8 +258,8 @@ export const App: React.FC = () => {
       name,
       norad_id: 0,
       category: 'Custom TLE',
-      description_th: 'เพิ่มจากข้อความ TLE',
-      description_en: 'Custom TLE',
+      description_th: 'Custom TLE import',
+      description_en: 'Custom TLE import',
       line1: l1,
       line2: l2,
       default_sensor: {
@@ -247,244 +275,286 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      {/* TOP STK COMMAND & PLAYBACK RIBBON */}
-      <header className="h-12 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between gap-2 shrink-0">
+    <div className="h-screen w-screen flex flex-col bg-[var(--color-paper)] text-[var(--color-ink)] overflow-hidden">
+      {/* TOP COMMAND & PLAYBACK RIBBON */}
+      <header className="h-14 bg-[var(--color-surface)] border-b border-[var(--color-rule)] px-4 flex items-center justify-between gap-3 shrink-0">
         {/* Brand & Add Catalog Button */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 font-extrabold text-sm tracking-tight text-sky-400">
-            <span className="text-lg">🛰️</span>
-            <span>OrbitScope 2.0</span>
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-              STK-Edu Edition
-            </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 font-display font-bold text-base tracking-tight text-[var(--color-ink)]">
+            <div className="w-7 h-7 rounded-lg bg-[var(--color-accent)] text-[var(--color-accent-ink)] flex items-center justify-center">
+              <Satellite className="w-4 h-4" />
+            </div>
+            <span>StellarScope-SSSLab</span>
           </div>
 
           <button
+            type="button"
             onClick={() => setShowCatalogModal(true)}
-            className="px-2.5 py-1 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition flex items-center gap-1 shadow"
+            className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-deep)] text-[var(--color-accent-ink)] font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm"
           >
-            <span>+ ดึงดาวเทียมจริง (CelesTrak / TLE)</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Satellite</span>
           </button>
         </div>
 
         {/* Simulation Clock & Transport Controls */}
-        <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg text-xs">
-          <span className="font-mono text-sky-300 font-semibold w-40">
+        <div className="flex items-center gap-1.5 bg-[var(--color-paper)] border border-[var(--color-rule)] px-2.5 py-1 rounded-xl text-xs">
+          <span className="font-mono-num text-[var(--color-ink)] font-medium w-40 px-1">
             {new Date(simTimeMs).toISOString().slice(0, 19).replace('T', ' ')} UTC
           </span>
           <button
+            type="button"
             onClick={() => setSimTimeMs(windowStartMs)}
-            className="px-1.5 py-0.5 rounded hover:bg-slate-800 text-slate-300"
-            title="กลับไปจุดเริ่มต้นฉาก"
+            className="p-1.5 rounded-lg hover:bg-[var(--color-paper-2)] text-[var(--color-ink-2)] transition-colors"
+            title="Reset to scenario start"
+            aria-label="Reset to scenario start"
           >
-            ⏮
+            <SkipBack className="w-3.5 h-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => setTimeSpeed((s) => -Math.abs(s))}
-            className={`px-1.5 py-0.5 rounded ${
-              timeSpeed < 0 ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-slate-800 text-slate-300'
+            className={`p-1.5 rounded-lg transition-colors ${
+              timeSpeed < 0
+                ? 'bg-amber-100 text-amber-800'
+                : 'hover:bg-[var(--color-paper-2)] text-[var(--color-ink-2)]'
             }`}
-            title="เดินเวลาย้อนกลับ"
+            title="Reverse time"
+            aria-label="Reverse time"
           >
-            ⏪
+            <Rewind className="w-3.5 h-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => setIsPlaying((p) => !p)}
-            className={`px-2.5 py-0.5 rounded font-bold ${
+            className={`px-3 py-1 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               isPlaying
-                ? 'bg-amber-500 text-slate-950'
-                : 'bg-emerald-500 text-slate-950'
+                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
             }`}
           >
-            {isPlaying ? '⏸ หยุด' : '▶ เล่น'}
+            {isPlaying ? (
+              <>
+                <Pause className="w-3.5 h-3.5" />
+                <span>Pause</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5" />
+                <span>Play</span>
+              </>
+            )}
           </button>
           <button
+            type="button"
             onClick={() => setTimeSpeed((s) => Math.abs(s))}
-            className={`px-1.5 py-0.5 rounded ${
-              timeSpeed > 0 ? 'bg-sky-500/20 text-sky-300' : 'hover:bg-slate-800 text-slate-300'
+            className={`p-1.5 rounded-lg transition-colors ${
+              timeSpeed > 0
+                ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-deep)]'
+                : 'hover:bg-[var(--color-paper-2)] text-[var(--color-ink-2)]'
             }`}
-            title="เดินเวลาไปข้างหน้า"
+            title="Forward time"
+            aria-label="Forward time"
           >
-            ⏩
+            <FastForward className="w-3.5 h-3.5" />
           </button>
           <select
+            aria-label="Simulation speed multiplier"
             value={Math.abs(timeSpeed)}
             onChange={(e) => {
               const sign = timeSpeed < 0 ? -1 : 1;
               setTimeSpeed(sign * Number(e.target.value));
             }}
-            className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-200"
+            className="bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-lg px-2 py-1 text-xs font-mono-num text-[var(--color-ink)]"
           >
-            <option value={1}>1x (เวลาจริง)</option>
+            <option value={1}>1x (Real-time)</option>
             <option value={10}>10x</option>
             <option value={30}>30x</option>
-            <option value={60}>60x (1 นาที/วิ)</option>
-            <option value={300}>300x (5 นาที/วิ)</option>
-            <option value={900}>900x (15 นาที/วิ)</option>
+            <option value={60}>60x (1m/s)</option>
+            <option value={300}>300x (5m/s)</option>
+            <option value={900}>900x (15m/s)</option>
           </select>
           <button
+            type="button"
             onClick={() => {
               const now = Date.now();
               setWindowStartMs(now);
               setSimTimeMs(now);
             }}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+            className="px-2.5 py-1 rounded-lg bg-[var(--color-surface)] hover:bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-ink-2)] text-xs font-medium transition-colors"
           >
-            เวลาปัจจุบัน
+            Now
           </button>
         </div>
 
         {/* Viewport Layout, Imagery & Educational Vector Toggles */}
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-2 text-xs">
           {/* Split 3D/2D Switcher */}
-          <div className="flex bg-slate-950 border border-slate-800 rounded-md p-0.5">
+          <div className="flex bg-[var(--color-paper)] border border-[var(--color-rule)] rounded-lg p-0.5">
             <button
+              type="button"
               onClick={() => setViewLayout('split_3d_2d')}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                 viewLayout === 'split_3d_2d'
-                  ? 'bg-sky-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
               }`}
             >
-              3D + 2D
+              Split
             </button>
             <button
+              type="button"
               onClick={() => setViewLayout('only_3d')}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                 viewLayout === 'only_3d'
-                  ? 'bg-sky-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
               }`}
             >
-              3D ล้วน
+              3D
             </button>
             <button
+              type="button"
               onClick={() => setViewLayout('only_2d')}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                 viewLayout === 'only_2d'
-                  ? 'bg-sky-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
               }`}
             >
-              2D ล้วน
+              2D
             </button>
           </div>
 
           {/* Hybrid Imagery Selector */}
           <select
+            aria-label="Map imagery layer"
             value={mapImageryMode}
             onChange={(e) => setMapImageryMode(e.target.value as typeof mapImageryMode)}
-            className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-[11px] text-slate-200"
-            title="เลือกรูปแบบแผนที่โลก (Hybrid ออฟไลน์ + ออนไลน์ความละเอียดสูง)"
+            className="bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-ink)]"
+            title="Select Earth map imagery source"
           >
-            <option value="hybrid_highres">🗺️ แผนที่ Hybrid (ดาวเทียมละเอียดสูง + Offline)</option>
-            <option value="offline_blue_marble">🌏 แผนที่ Offline Blue Marble 100%</option>
-            <option value="osm">🏙️ แผนที่ถนน OpenStreetMap</option>
+            <option value="hybrid_highres">Hybrid Satellite + Offline</option>
+            <option value="offline_blue_marble">Offline Blue Marble</option>
+            <option value="osm">OpenStreetMap</option>
           </select>
 
-          {/* 3D Educational Vector Quick Toggles */}
+          {/* 3D Vector Quick Toggles */}
+          <div className="flex items-center gap-1 bg-[var(--color-paper)] border border-[var(--color-rule)] rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setVectorVis((v) => ({ ...v, showEciAxes: !v.showEciAxes }))}
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                vectorVis.showEciAxes
+                  ? 'bg-red-100 text-red-800'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              }`}
+              title="Toggle ECI inertial coordinate axes"
+            >
+              ECI
+            </button>
+            <button
+              type="button"
+              onClick={() => setVectorVis((v) => ({ ...v, showEcefAxes: !v.showEcefAxes }))}
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                vectorVis.showEcefAxes
+                  ? 'bg-orange-100 text-orange-800'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              }`}
+              title="Toggle ECEF Earth-fixed coordinate axes"
+            >
+              ECEF
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setVectorVis((v) => ({ ...v, showSatBodyVectors: !v.showSatBodyVectors }))
+              }
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                vectorVis.showSatBodyVectors
+                  ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-deep)]'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              }`}
+              title="Toggle satellite Velocity, Nadir, Normal, and Sun vectors"
+            >
+              Vectors
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setVectorVis((v) => ({ ...v, showOrbitalPlane: !v.showOrbitalPlane }))
+              }
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                vectorVis.showOrbitalPlane
+                  ? 'bg-sky-100 text-sky-800'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              }`}
+              title="Toggle 3D orbital plane disc"
+            >
+              Plane
+            </button>
+          </div>
+
           <button
-            onClick={() =>
-              setVectorVis((v) => ({ ...v, showEciAxes: !v.showEciAxes }))
-            }
-            className={`px-2 py-1 rounded border text-[11px] font-medium transition ${
-              vectorVis.showEciAxes
-                ? 'bg-red-500/20 border-red-400 text-red-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-            }`}
-            title="แสดงแกนพิกัดเฉื่อย ECI (ชี้จุดวสันตวิษุวัต)"
-          >
-            แกน ECI
-          </button>
-          <button
-            onClick={() =>
-              setVectorVis((v) => ({ ...v, showEcefAxes: !v.showEcefAxes }))
-            }
-            className={`px-2 py-1 rounded border text-[11px] font-medium transition ${
-              vectorVis.showEcefAxes
-                ? 'bg-orange-500/20 border-orange-400 text-orange-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-            }`}
-            title="แสดงแกนพิกัดหมุนตามโลก ECEF (0° Greenwich)"
-          >
-            แกน ECEF
-          </button>
-          <button
-            onClick={() =>
-              setVectorVis((v) => ({ ...v, showSatBodyVectors: !v.showSatBodyVectors }))
-            }
-            className={`px-2 py-1 rounded border text-[11px] font-medium transition ${
-              vectorVis.showSatBodyVectors
-                ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-            }`}
-            title="แสดงเวกเตอร์ความเร็ว (V), Nadir, Orbit Normal และดวงอาทิตย์บนตัวดาวเทียม"
-          >
-            เวกเตอร์ดาวเทียม
-          </button>
-          <button
-            onClick={() =>
-              setVectorVis((v) => ({ ...v, showOrbitalPlane: !v.showOrbitalPlane }))
-            }
-            className={`px-2 py-1 rounded border text-[11px] font-medium transition ${
-              vectorVis.showOrbitalPlane
-                ? 'bg-purple-500/20 border-purple-400 text-purple-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-            }`}
-            title="แสดงแผ่นระนาบวงโคจร 3D พร้อมมุม Inclination (i) และ RAAN (Ω)"
-          >
-            ระนาบวงโคจร
-          </button>
-          <button
+            type="button"
             onClick={() => setShowSensorPiP((p) => !p)}
-            className={`px-2 py-1 rounded border text-[11px] font-semibold transition ${
+            className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
               showSensorPiP
-                ? 'bg-sky-500/25 border-sky-400 text-sky-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent)] text-[var(--color-accent-deep)]'
+                : 'bg-[var(--color-surface)] border-[var(--color-rule)] text-[var(--color-muted)] hover:text-[var(--color-ink)]'
             }`}
           >
-            📷 จอกล้อง PiP
+            <Camera className="w-3.5 h-3.5" />
+            <span>Sensor PiP</span>
           </button>
         </div>
       </header>
 
       {/* MAIN WORKSPACE ROW: LEFT OBJECT BROWSER | CENTER 3D+2D VIEWPORTS | RIGHT INSPECTOR */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* LEFT PANEL: STK OBJECT BROWSER TREE */}
-        <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 text-xs overflow-y-auto">
-          <div className="p-3 border-b border-slate-800 space-y-2">
-            <div className="font-bold text-slate-200 flex items-center justify-between">
-              <span>📂 วัตถุในฉาก (Object Browser)</span>
-            </div>
+        {/* LEFT PANEL: OBJECT BROWSER */}
+        <aside className="w-68 bg-[var(--color-surface)] border-r border-[var(--color-rule)] flex flex-col shrink-0 text-xs overflow-y-auto">
+          <div className="p-3.5 border-b border-[var(--color-rule)] flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[var(--color-accent)]" />
+            <span className="font-display font-semibold text-sm text-[var(--color-ink)]">
+              Object Browser
+            </span>
+          </div>
 
-            {/* Satellites Section */}
+          {/* Satellites Section */}
+          <div className="p-3.5 border-b border-[var(--color-rule)] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-[var(--color-muted)] flex items-center gap-1.5">
+                <Satellite className="w-3.5 h-3.5" />
+                <span>Satellites ({satellites.length})</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowCatalogModal(true)}
+                className="text-[var(--color-accent-deep)] hover:underline font-medium flex items-center gap-0.5"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Add</span>
+              </button>
+            </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span>ดาวเทียม ({satellites.length})</span>
-                <button
-                  onClick={() => setShowCatalogModal(true)}
-                  className="text-sky-400 hover:underline text-[11px]"
-                >
-                  + เพิ่ม
-                </button>
-              </div>
               {satellites.map((sat) => {
                 const isSel = sat.id === selectedSatId;
                 return (
                   <div
                     key={sat.id}
                     onClick={() => setSelectedSatId(sat.id)}
-                    className={`flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer transition ${
+                    className={`flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
                       isSel
-                        ? 'bg-sky-500/20 border border-sky-500/50 text-white font-semibold'
-                        : 'hover:bg-slate-800/70 text-slate-300'
+                        ? 'bg-[var(--color-accent-soft)]/70 border border-[var(--color-accent)]/50 text-[var(--color-ink)] font-medium'
+                        : 'hover:bg-[var(--color-paper-2)] text-[var(--color-ink-2)] border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
                       <input
                         type="checkbox"
                         checked={sat.visible}
+                        aria-label={`Toggle visibility for ${sat.name}`}
                         onChange={(e) => {
                           e.stopPropagation();
                           setSatellites((prev) =>
@@ -493,7 +563,7 @@ export const App: React.FC = () => {
                             )
                           );
                         }}
-                        className="accent-sky-400"
+                        className="accent-[var(--color-accent)]"
                       />
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -503,16 +573,18 @@ export const App: React.FC = () => {
                     </div>
                     {satellites.length > 1 && (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           const rem = satellites.filter((s) => s.id !== sat.id);
                           setSatellites(rem);
                           if (isSel && rem[0]) setSelectedSatId(rem[0].id);
                         }}
-                        className="text-slate-500 hover:text-rose-400 px-1"
-                        title="ลบดาวเทียม"
+                        className="text-[var(--color-muted)] hover:text-red-600 p-0.5 rounded"
+                        title="Remove satellite"
+                        aria-label={`Remove ${sat.name}`}
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -522,119 +594,147 @@ export const App: React.FC = () => {
           </div>
 
           {/* Ground Stations Section */}
-          <div className="p-3 border-b border-slate-800 space-y-1.5">
+          <div className="p-3.5 border-b border-[var(--color-rule)] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase">
-                📡 สถานีภาคพื้นดิน ({stations.length})
+              <span className="font-medium text-[var(--color-muted)] flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5" />
+                <span>Ground Stations ({stations.length})</span>
               </span>
               <button
+                type="button"
                 onClick={() =>
                   setMapClickMode((m) => (m === 'add_station' ? 'none' : 'add_station'))
                 }
-                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors ${
                   mapClickMode === 'add_station'
-                    ? 'bg-emerald-500 text-slate-950'
-                    : 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
+                    : 'bg-[var(--color-surface-muted)] text-[var(--color-accent-deep)] hover:bg-[var(--color-paper-2)]'
                 }`}
               >
-                {mapClickMode === 'add_station' ? 'คลิกบนแผนที่...' : '+ คลิกวางสถานี'}
+                {mapClickMode === 'add_station' ? 'Click map...' : '+ Place'}
               </button>
             </div>
-            {stations.map((gs) => (
-              <div
-                key={gs.id}
-                className="flex items-center justify-between px-2 py-1 rounded bg-slate-950/60 text-slate-300 text-[11px]"
-              >
-                <span className="truncate">
-                  📡 {gs.name} ({gs.lat.toFixed(1)}°, {gs.lon.toFixed(1)}°)
-                </span>
-                <button
-                  onClick={() => setStations((prev) => prev.filter((x) => x.id !== gs.id))}
-                  className="text-slate-500 hover:text-rose-400 px-1"
+            <div className="space-y-1">
+              {stations.map((gs) => (
+                <div
+                  key={gs.id}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--color-paper)] border border-[var(--color-rule)]/70 text-[var(--color-ink-2)]"
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  <span className="truncate">
+                    {gs.name}{' '}
+                    <span className="font-mono-num text-[var(--color-muted)]">
+                      ({gs.lat.toFixed(1)}°, {gs.lon.toFixed(1)}°)
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStations((prev) => prev.filter((x) => x.id !== gs.id))}
+                    className="text-[var(--color-muted)] hover:text-red-600 p-0.5 rounded"
+                    aria-label={`Remove ${gs.name}`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Imaging Point Targets Section */}
-          <div className="p-3 border-b border-slate-800 space-y-1.5">
+          <div className="p-3.5 border-b border-[var(--color-rule)] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase">
-                🎯 เป้าหมายถ่ายภาพ ({targets.length})
+              <span className="font-medium text-[var(--color-muted)] flex items-center gap-1.5">
+                <Crosshair className="w-3.5 h-3.5" />
+                <span>Point Targets ({targets.length})</span>
               </span>
               <button
+                type="button"
                 onClick={() =>
                   setMapClickMode((m) => (m === 'add_target' ? 'none' : 'add_target'))
                 }
-                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors ${
                   mapClickMode === 'add_target'
-                    ? 'bg-amber-500 text-slate-950'
-                    : 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-[var(--color-surface-muted)] text-amber-700 hover:bg-[var(--color-paper-2)]'
                 }`}
               >
-                {mapClickMode === 'add_target' ? 'คลิกบนแผนที่...' : '+ คลิกวางเป้าหมาย'}
+                {mapClickMode === 'add_target' ? 'Click map...' : '+ Place'}
               </button>
             </div>
-            {targets.map((tgt) => (
-              <div
-                key={tgt.id}
-                className="flex items-center justify-between px-2 py-1 rounded bg-slate-950/60 text-slate-300 text-[11px]"
-              >
-                <span className="truncate">
-                  🎯 {tgt.name} ({tgt.lat.toFixed(1)}°, {tgt.lon.toFixed(1)}°)
-                </span>
-                <button
-                  onClick={() => setTargets((prev) => prev.filter((x) => x.id !== tgt.id))}
-                  className="text-slate-500 hover:text-rose-400 px-1"
+            <div className="space-y-1">
+              {targets.map((tgt) => (
+                <div
+                  key={tgt.id}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--color-paper)] border border-[var(--color-rule)]/70 text-[var(--color-ink-2)]"
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  <span className="truncate">
+                    {tgt.name}{' '}
+                    <span className="font-mono-num text-[var(--color-muted)]">
+                      ({tgt.lat.toFixed(1)}°, {tgt.lon.toFixed(1)}°)
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTargets((prev) => prev.filter((x) => x.id !== tgt.id))}
+                    className="text-[var(--color-muted)] hover:text-red-600 p-0.5 rounded"
+                    aria-label={`Remove ${tgt.name}`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Polygon Area Target Section */}
-          <div className="p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-purple-300 uppercase">
-                🗺️ พื้นที่เป้าหมาย (Area Target)
-              </span>
+          <div className="p-3.5 space-y-2.5">
+            <div className="font-medium text-[var(--color-muted)] flex items-center gap-1.5">
+              <Pentagon className="w-3.5 h-3.5" />
+              <span>Area Target</span>
             </div>
-            <div className="p-2 rounded-lg bg-slate-950 border border-purple-500/30 space-y-2 text-[11px]">
-              <div className="font-semibold text-purple-200">{areaTarget.name}</div>
-              <div className="text-slate-400">
-                จุดยอด (Vertices): {areaTarget.vertices.length} จุด | ความครอบคลุม:{' '}
-                <span className="text-emerald-400 font-bold">
-                  {areaCoverage ? `${areaCoverage.coverage_percent.toFixed(1)}%` : '—'}
+            <div className="p-3 rounded-xl bg-[var(--color-paper)] border border-[var(--color-rule)] space-y-2.5">
+              <div className="font-medium text-[var(--color-ink)]">{areaTarget.name}</div>
+              <div className="flex items-center justify-between text-[var(--color-muted)]">
+                <span className="font-mono-num">{areaTarget.vertices.length} vertices</span>
+                <span className="font-mono-num font-semibold text-[var(--color-accent-deep)]">
+                  {areaCoverage ? `${areaCoverage.coverage_percent.toFixed(1)}% covered` : '—'}
                 </span>
               </div>
               <div className="flex gap-1.5">
                 <button
+                  type="button"
                   onClick={() =>
                     setMapClickMode((m) =>
                       m === 'add_area_vertex' ? 'none' : 'add_area_vertex'
                     )
                   }
-                  className={`flex-1 py-1 rounded font-semibold text-center ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg font-medium flex items-center justify-center gap-1 transition-colors ${
                     mapClickMode === 'add_area_vertex'
-                      ? 'bg-purple-500 text-slate-950'
-                      : 'bg-slate-800 text-purple-300 hover:bg-slate-700'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
+                      : 'bg-[var(--color-surface)] border border-[var(--color-rule)] text-[var(--color-ink)] hover:bg-[var(--color-paper-2)]'
                   }`}
                 >
-                  {mapClickMode === 'add_area_vertex'
-                    ? '✅ เสร็จสิ้นการวาด'
-                    : '✏️ คลิกเพิ่มจุดขอบเขต'}
+                  {mapClickMode === 'add_area_vertex' ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Done</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Vertex</span>
+                    </>
+                  )}
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     setAreaTarget((prev) => ({ ...prev, vertices: [] }))
                   }
-                  className="px-2 py-1 rounded bg-slate-800 hover:bg-rose-950 text-slate-300"
-                  title="ล้างกรอบพื้นที่เพื่อวาดใหม่"
+                  className="px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-rule)] hover:bg-red-50 hover:text-red-700 text-[var(--color-muted)] transition-colors"
+                  title="Clear polygon vertices"
+                  aria-label="Clear polygon vertices"
                 >
-                  ล้าง
+                  <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -662,143 +762,159 @@ export const App: React.FC = () => {
         />
 
         {/* RIGHT PANEL: INTERACTIVE KEPLERIAN SANDBOX & SENSOR SLEW INSPECTOR */}
-        <aside className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col shrink-0 text-xs overflow-y-auto">
+        <aside className="w-88 bg-[var(--color-surface)] border-l border-[var(--color-rule)] flex flex-col shrink-0 text-xs overflow-y-auto">
           {selectedSat && currentTelemetry && (
             <>
               {/* Selected Satellite Header & Live Telemetry Card */}
-              <div className="p-3 border-b border-slate-800 bg-slate-950/60 space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="p-3.5 border-b border-[var(--color-rule)] bg-[var(--color-paper)] space-y-3">
+                <div className="flex items-center gap-2.5">
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: selectedSat.color }}
                   />
                   <input
+                    aria-label="Selected satellite name"
                     type="text"
                     value={selectedSat.name}
                     onChange={(e) =>
                       updateSelectedSat((s) => ({ ...s, name: e.target.value }))
                     }
-                    className="bg-transparent font-bold text-sm text-white border-b border-transparent focus:border-sky-500 outline-none flex-1"
+                    className="bg-transparent font-display font-bold text-sm text-[var(--color-ink)] border-b border-transparent focus:border-[var(--color-accent)] outline-none flex-1"
                   />
                 </div>
 
                 {/* Live State Grid */}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-                  <div className="text-slate-400">
-                    ละติจูด:{' '}
-                    <span className="font-mono text-slate-100">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs bg-[var(--color-surface)] p-3 rounded-xl border border-[var(--color-rule)]">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted)]">Lat</span>
+                    <span className="font-mono-num text-[var(--color-ink)] font-medium">
                       {currentTelemetry.state.geodetic.lat.toFixed(2)}°
                     </span>
                   </div>
-                  <div className="text-slate-400">
-                    ลองจิจูด:{' '}
-                    <span className="font-mono text-slate-100">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted)]">Lon</span>
+                    <span className="font-mono-num text-[var(--color-ink)] font-medium">
                       {currentTelemetry.state.geodetic.lon.toFixed(2)}°
                     </span>
                   </div>
-                  <div className="text-slate-400">
-                    ความสูง:{' '}
-                    <span className="font-mono text-sky-300 font-semibold">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted)]">Alt</span>
+                    <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                       {currentTelemetry.state.geodetic.alt.toFixed(1)} km
                     </span>
                   </div>
-                  <div className="text-slate-400">
-                    ความเร็ว:{' '}
-                    <span className="font-mono text-slate-100">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted)]">Vel</span>
+                    <span className="font-mono-num text-[var(--color-ink)] font-medium">
                       {currentTelemetry.state.speedKmS.toFixed(2)} km/s
                     </span>
                   </div>
-                  <div className="text-slate-400">
-                    คาบโคจร:{' '}
-                    <span className="font-mono text-slate-100">
-                      {currentTelemetry.state.periodMin.toFixed(1)} นาที
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted)]">Period</span>
+                    <span className="font-mono-num text-[var(--color-ink)] font-medium">
+                      {currentTelemetry.state.periodMin.toFixed(1)} min
                     </span>
                   </div>
-                  <div className="text-slate-400">
-                    สถานะแสง:{' '}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[var(--color-muted)]">Solar</span>
                     <span
-                      className={
+                      className={`inline-flex items-center gap-1 font-medium ${
                         currentTelemetry.state.inSunlight
-                          ? 'text-amber-300 font-semibold'
-                          : 'text-slate-400'
-                      }
+                          ? 'text-amber-700'
+                          : 'text-[var(--color-muted)]'
+                      }`}
                     >
-                      {currentTelemetry.state.inSunlight ? '☀ รับแสงอาทิตย์' : '🌑 ในเงาโลก'}
+                      {currentTelemetry.state.inSunlight ? (
+                        <>
+                          <Sun className="w-3 h-3" />
+                          <span>Sunlit</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="w-3 h-3" />
+                          <span>Eclipse</span>
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
 
                 {/* Inspector Mode Tabs */}
-                <div className="grid grid-cols-3 bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-[11px]">
+                <div className="grid grid-cols-3 bg-[var(--color-surface-muted)] border border-[var(--color-rule)] rounded-xl p-0.5 text-xs">
                   <button
+                    type="button"
                     onClick={() => setRightTab('kepler')}
-                    className={`py-1 rounded font-semibold transition ${
+                    className={`py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
                       rightTab === 'kepler'
-                        ? 'bg-sky-500 text-slate-950'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                     }`}
                   >
-                    🪐 วงโคจร (Kepler)
+                    <Orbit className="w-3.5 h-3.5" />
+                    <span>Orbit</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRightTab('sensor')}
-                    className={`py-1 rounded font-semibold transition ${
+                    className={`py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
                       rightTab === 'sensor'
-                        ? 'bg-sky-500 text-slate-950'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                     }`}
                   >
-                    📷 กล้อง & Slew
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Sensor</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRightTab('coverage')}
-                    className={`py-1 rounded font-semibold transition ${
+                    className={`py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
                       rightTab === 'coverage'
-                        ? 'bg-sky-500 text-slate-950'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm border border-[var(--color-rule)]'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                     }`}
                   >
-                    📐 สื่อการสอน
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>Guide</span>
                   </button>
                 </div>
               </div>
 
               {/* TAB 1: INTERACTIVE KEPLERIAN SANDBOX & ORBIT PRESETS */}
               {rightTab === 'kepler' && (
-                <div className="p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sky-400">
-                      🎛️ ปรับค่าวงโคจรแบบเห็นผลทันที (Kepler Sandbox)
-                    </span>
+                <div className="p-3.5 space-y-4">
+                  <div className="flex items-center gap-1.5 font-display font-semibold text-sm text-[var(--color-ink)]">
+                    <Sliders className="w-4 h-4 text-[var(--color-accent)]" />
+                    <span>Keplerian Orbit Sandbox</span>
                   </div>
 
                   {selectedSat.source_mode === 'tle' && (
-                    <div className="p-2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-200 text-[11px] flex items-center justify-between">
-                      <span>ดาวเทียมนี้ใช้ข้อมูล TLE จริง (SGP4)</span>
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+                      <span>Using live SGP4 TLE propagation</span>
                       <button
+                        type="button"
                         onClick={() =>
                           updateSelectedSat((s) => ({ ...s, source_mode: 'keplerian' }))
                         }
-                        className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold"
+                        className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium shrink-0 transition-colors"
                       >
-                        ปลดล็อกเป็น Kepler
+                        Switch to Kepler
                       </button>
                     </div>
                   )}
 
                   {/* 6 Classical Orbital Element Sliders */}
-                  <div className="space-y-2.5 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                  <div className="space-y-3 bg-[var(--color-paper)] p-3 rounded-xl border border-[var(--color-rule)]">
                     {/* Altitude */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300" title="ความสูงวงโคจรเหนือเส้นศูนย์สูตร">
-                          ความสูง (Altitude h)
-                        </span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Altitude (h)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.altitude_km.toFixed(0)} km
                         </span>
                       </div>
                       <input
+                        aria-label="Orbital altitude"
                         type="range"
                         min={200}
                         max={36000}
@@ -814,21 +930,20 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* Eccentricity */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300" title="ความรีของวงโคจร (0 = วงกลม, >0 = วงรี)">
-                          ความรีวงโคจร (Eccentricity e)
-                        </span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Eccentricity (e)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.eccentricity.toFixed(4)}
                         </span>
                       </div>
                       <input
+                        aria-label="Orbital eccentricity"
                         type="range"
                         min={0}
                         max={0.78}
@@ -844,21 +959,20 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* Inclination */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300" title="มุมเอียงของระนาบวงโคจรเทียบกับเส้นศูนย์สูตร">
-                          ความเอียงวงโคจร (Inclination i)
-                        </span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Inclination (i)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.inclination_deg.toFixed(2)}°
                         </span>
                       </div>
                       <input
+                        aria-label="Orbital inclination"
                         type="range"
                         min={0}
                         max={140}
@@ -874,21 +988,20 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* RAAN */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300" title="Right Ascension of Ascending Node (มุมจุดตัดขาขึ้น)">
-                          มุมจุดตัดขาขึ้น (RAAN Ω)
-                        </span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">RAAN (Ω)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.raan_deg.toFixed(1)}°
                         </span>
                       </div>
                       <input
+                        aria-label="RAAN"
                         type="range"
                         min={0}
                         max={360}
@@ -904,19 +1017,20 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* Argument of Perigee */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300">มุมจุดใกล้โลกที่สุด (Arg of Perigee ω)</span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Arg of Perigee (ω)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.arg_perigee_deg.toFixed(1)}°
                         </span>
                       </div>
                       <input
+                        aria-label="Argument of perigee"
                         type="range"
                         min={0}
                         max={360}
@@ -932,19 +1046,20 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* Mean Anomaly */}
                     <div>
-                      <div className="flex justify-between text-[11px] mb-0.5">
-                        <span className="text-slate-300">ตำแหน่งในวงโคจร (Mean Anomaly M)</span>
-                        <span className="font-mono text-sky-300 font-semibold">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Mean Anomaly (M)</span>
+                        <span className="font-mono-num text-[var(--color-accent-deep)] font-semibold">
                           {selectedSat.keplerian.mean_anomaly_deg.toFixed(1)}°
                         </span>
                       </div>
                       <input
+                        aria-label="Mean anomaly"
                         type="range"
                         min={0}
                         max={360}
@@ -960,12 +1075,13 @@ export const App: React.FC = () => {
                             },
                           }))
                         }
-                        className="w-full accent-sky-400"
+                        className="w-full"
                       />
                     </div>
 
                     {/* 1-Click Sun-Synchronous Calculator */}
                     <button
+                      type="button"
                       onClick={() => {
                         const alt = Math.min(1200, Math.max(400, selectedSat.keplerian.altitude_km));
                         const ssoI = Number(sunSyncInclinationDeg(alt).toFixed(3));
@@ -982,19 +1098,22 @@ export const App: React.FC = () => {
                           },
                         }));
                       }}
-                      className="w-full py-1.5 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 border border-sky-500/40 text-sky-300 font-semibold text-[11px] transition"
+                      className="w-full py-2 px-3 rounded-lg bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-ink)] border border-[var(--color-accent)]/40 text-[var(--color-accent-deep)] font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
                     >
-                      ☀️ คำนวณวงโคจรสัมพันธ์ดวงอาทิตย์ (SSO 10:30 น.) อัตโนมัติ
+                      <Sun className="w-3.5 h-3.5" />
+                      <span>Compute SSO (10:30 LTDN)</span>
                     </button>
                   </div>
 
                   {/* Educational Orbit Presets */}
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-slate-300 text-[11px]">
-                      🎓 ชุดวงโคจรมาตรฐานสำหรับเปรียบเทียบและสอน (Presets)
+                  <div className="space-y-2">
+                    <div className="font-medium text-[var(--color-muted)] flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      <span>Standard Orbit Presets</span>
                     </div>
                     {orbitPresets.map((preset) => (
                       <button
+                        type="button"
                         key={preset.id}
                         onClick={() =>
                           updateSelectedSat((s) => ({
@@ -1004,17 +1123,17 @@ export const App: React.FC = () => {
                             keplerian: { ...preset.keplerian },
                           }))
                         }
-                        className="w-full text-left p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition space-y-0.5"
+                        className="w-full text-left p-2.5 rounded-xl bg-[var(--color-paper)] hover:bg-[var(--color-paper-2)] border border-[var(--color-rule)] transition-colors space-y-1"
                       >
-                        <div className="font-semibold text-sky-300 text-[11px] flex items-center justify-between">
-                          <span>{preset.name_th}</span>
+                        <div className="font-medium text-[var(--color-ink)] flex items-center justify-between">
+                          <span>{preset.name_en}</span>
                           <span
-                            className="w-2.5 h-2.5 rounded-full"
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
                             style={{ backgroundColor: preset.color }}
                           />
                         </div>
-                        <div className="text-[10px] text-slate-400 leading-relaxed">
-                          {preset.description_th}
+                        <div className="text-xs text-[var(--color-muted)] leading-relaxed">
+                          {preset.description_en}
                         </div>
                       </button>
                     ))}
@@ -1024,12 +1143,14 @@ export const App: React.FC = () => {
 
               {/* TAB 2: SENSOR FOV, AUTO-TARGET SLEW & GSD */}
               {rightTab === 'sensor' && (
-                <div className="p-3 space-y-3">
+                <div className="p-3.5 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sky-400">
-                      📷 ตั้งค่าเซนเซอร์ถ่ายภาพ & การหันกล้อง (Slew)
-                    </span>
+                    <div className="flex items-center gap-1.5 font-display font-semibold text-sm text-[var(--color-ink)]">
+                      <Camera className="w-4 h-4 text-[var(--color-accent)]" />
+                      <span>Payload Sensor & Slew</span>
+                    </div>
                     <input
+                      aria-label="Enable payload sensor"
                       type="checkbox"
                       checked={selectedSat.sensor.enabled}
                       onChange={(e) =>
@@ -1038,74 +1159,81 @@ export const App: React.FC = () => {
                           sensor: { ...s.sensor, enabled: e.target.checked },
                         }))
                       }
-                      className="accent-sky-400"
+                      className="accent-[var(--color-accent)]"
                     />
                   </div>
 
                   {/* Pointing Mode Selector */}
-                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-2">
-                    <div className="text-[11px] font-semibold text-slate-300">
-                      โหมดการหันเล็งของกล้อง (Attitude / Slew Pointing)
+                  <div className="bg-[var(--color-paper)] p-3 rounded-xl border border-[var(--color-rule)] space-y-2.5">
+                    <div className="font-medium text-[var(--color-ink)]">
+                      Attitude & Slew Pointing Mode
                     </div>
                     <div className="grid grid-cols-1 gap-1.5">
                       <button
+                        type="button"
                         onClick={() =>
                           updateSelectedSat((s) => ({
                             ...s,
                             sensor: { ...s.sensor, pointing_mode: 'target_track' },
                           }))
                         }
-                        className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition ${
+                        className={`px-3 py-2 rounded-lg text-left text-xs border flex items-center gap-2 transition-colors ${
                           selectedSat.sensor.pointing_mode === 'target_track'
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-200 font-semibold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                            ? 'bg-amber-50 border-amber-400 text-amber-900 font-medium'
+                            : 'bg-[var(--color-surface)] border-[var(--color-rule)] text-[var(--color-ink-2)] hover:bg-[var(--color-paper-2)]'
                         }`}
                       >
-                        🎯 Auto Target Tracking — เอียงกล้องเกาะเป้าหมายอัตโนมัติขณะบินผ่าน
+                        <Crosshair className="w-3.5 h-3.5 shrink-0" />
+                        <span>Auto Target Tracking</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() =>
                           updateSelectedSat((s) => ({
                             ...s,
                             sensor: { ...s.sensor, pointing_mode: 'nadir', roll_deg: 0, pitch_deg: 0 },
                           }))
                         }
-                        className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition ${
+                        className={`px-3 py-2 rounded-lg text-left text-xs border flex items-center gap-2 transition-colors ${
                           selectedSat.sensor.pointing_mode === 'nadir'
-                            ? 'bg-sky-500/20 border-sky-400 text-sky-200 font-semibold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                            ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent)] text-[var(--color-accent-deep)] font-medium'
+                            : 'bg-[var(--color-surface)] border-[var(--color-rule)] text-[var(--color-ink-2)] hover:bg-[var(--color-paper-2)]'
                         }`}
                       >
-                        ⬇️ Nadir Pointing — ชี้ตั้งฉากลงพื้นโลกเสมอ (0° Roll/Pitch)
+                        <ArrowDownToLine className="w-3.5 h-3.5 shrink-0" />
+                        <span>Nadir Pointing (0° Roll/Pitch)</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() =>
                           updateSelectedSat((s) => ({
                             ...s,
                             sensor: { ...s.sensor, pointing_mode: 'fixed_slew' },
                           }))
                         }
-                        className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition ${
+                        className={`px-3 py-2 rounded-lg text-left text-xs border flex items-center gap-2 transition-colors ${
                           selectedSat.sensor.pointing_mode === 'fixed_slew'
-                            ? 'bg-purple-500/20 border-purple-400 text-purple-200 font-semibold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                            ? 'bg-sky-50 border-sky-400 text-sky-900 font-medium'
+                            : 'bg-[var(--color-surface)] border-[var(--color-rule)] text-[var(--color-ink-2)] hover:bg-[var(--color-paper-2)]'
                         }`}
                       >
-                        📐 Fixed Roll/Pitch — กำหนดมุมเอียงกล้องเอง (เช่น SAR Side-Looking)
+                        <Sliders className="w-3.5 h-3.5 shrink-0" />
+                        <span>Fixed Roll/Pitch (SAR Slew)</span>
                       </button>
                     </div>
 
                     {/* Manual Roll / Pitch Sliders */}
                     {selectedSat.sensor.pointing_mode === 'fixed_slew' && (
-                      <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <div className="space-y-2.5 pt-2.5 border-t border-[var(--color-rule)]">
                         <div>
-                          <div className="flex justify-between text-[11px]">
-                            <span>มุมเอียงข้าง (Roll Cross-Track)</span>
-                            <span className="font-mono text-sky-300">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-[var(--color-ink-2)]">Roll (Cross-Track)</span>
+                            <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                               {selectedSat.sensor.roll_deg.toFixed(1)}°
                             </span>
                           </div>
                           <input
+                            aria-label="Sensor roll angle"
                             type="range"
                             min={-45}
                             max={45}
@@ -1117,17 +1245,18 @@ export const App: React.FC = () => {
                                 sensor: { ...s.sensor, roll_deg: Number(e.target.value) },
                               }))
                             }
-                            className="w-full accent-sky-400"
+                            className="w-full"
                           />
                         </div>
                         <div>
-                          <div className="flex justify-between text-[11px]">
-                            <span>มุมเอียงหน้า-หลัง (Pitch Along-Track)</span>
-                            <span className="font-mono text-sky-300">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-[var(--color-ink-2)]">Pitch (Along-Track)</span>
+                            <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                               {selectedSat.sensor.pitch_deg.toFixed(1)}°
                             </span>
                           </div>
                           <input
+                            aria-label="Sensor pitch angle"
                             type="range"
                             min={-45}
                             max={45}
@@ -1139,21 +1268,22 @@ export const App: React.FC = () => {
                                 sensor: { ...s.sensor, pitch_deg: Number(e.target.value) },
                               }))
                             }
-                            className="w-full accent-sky-400"
+                            className="w-full"
                           />
                         </div>
                       </div>
                     )}
 
                     {/* Max Agility Slew Angle */}
-                    <div>
-                      <div className="flex justify-between text-[11px]">
-                        <span>ขีดจำกัดมุมเอียงสูงสุด (Max Off-Nadir Slew)</span>
-                        <span className="font-mono text-amber-300">
+                    <div className="pt-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-ink-2)]">Max Off-Nadir Slew Limit</span>
+                        <span className="font-mono-num text-amber-700 font-semibold">
                           ±{selectedSat.sensor.max_slew_deg.toFixed(0)}°
                         </span>
                       </div>
                       <input
+                        aria-label="Maximum slew angle"
                         type="range"
                         min={5}
                         max={50}
@@ -1165,17 +1295,18 @@ export const App: React.FC = () => {
                             sensor: { ...s.sensor, max_slew_deg: Number(e.target.value) },
                           }))
                         }
-                        className="w-full accent-amber-400"
+                        className="w-full"
                       />
                     </div>
                   </div>
 
                   {/* Sensor FOV Geometry */}
-                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-300">รูปทรงกรวยเซนเซอร์ (FOV)</span>
+                  <div className="bg-[var(--color-paper)] p-3 rounded-xl border border-[var(--color-rule)] space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-[var(--color-ink)]">Sensor FOV</span>
                       <div className="flex gap-1">
                         <button
+                          type="button"
                           onClick={() =>
                             updateSelectedSat((s) => ({
                               ...s,
@@ -1185,15 +1316,16 @@ export const App: React.FC = () => {
                               },
                             }))
                           }
-                          className={`px-2 py-0.5 rounded text-[10px] ${
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                             selectedSat.sensor.fov.type === 'rectangular'
-                              ? 'bg-sky-500 text-slate-950 font-bold'
-                              : 'bg-slate-800 text-slate-400'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
+                              : 'bg-[var(--color-surface)] border border-[var(--color-rule)] text-[var(--color-ink-2)]'
                           }`}
                         >
-                          สี่เหลี่ยม (Pushbroom)
+                          Pushbroom
                         </button>
                         <button
+                          type="button"
                           onClick={() =>
                             updateSelectedSat((s) => ({
                               ...s,
@@ -1203,61 +1335,61 @@ export const App: React.FC = () => {
                               },
                             }))
                           }
-                          className={`px-2 py-0.5 rounded text-[10px] ${
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                             selectedSat.sensor.fov.type === 'conic'
-                              ? 'bg-sky-500 text-slate-950 font-bold'
-                              : 'bg-slate-800 text-slate-400'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
+                              : 'bg-[var(--color-surface)] border border-[var(--color-rule)] text-[var(--color-ink-2)]'
                           }`}
                         >
-                          กรวยกลม (Conic)
+                          Conic
                         </button>
                       </div>
                     </div>
 
                     {selectedSat.sensor.fov.type === 'rectangular' ? (
-                      <>
-                        <div>
-                          <div className="flex justify-between text-[11px]">
-                            <span>ครึ่งมุมกว้างแนวขวาง (Cross-Track Half FOV)</span>
-                            <span className="font-mono text-sky-300">
-                              {selectedSat.sensor.fov.cross_half_deg.toFixed(1)}°
-                            </span>
-                          </div>
-                          <input
-                            type="range"
-                            min={1}
-                            max={35}
-                            step={0.5}
-                            value={selectedSat.sensor.fov.cross_half_deg}
-                            onChange={(e) =>
-                              updateSelectedSat((s) => ({
-                                ...s,
-                                sensor: {
-                                  ...s.sensor,
-                                  fov: {
-                                    type: 'rectangular',
-                                    cross_half_deg: Number(e.target.value),
-                                    along_half_deg:
-                                      s.sensor.fov.type === 'rectangular'
-                                        ? s.sensor.fov.along_half_deg
-                                        : 1.0,
-                                  },
-                                },
-                              }))
-                            }
-                            className="w-full accent-sky-400"
-                          />
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[var(--color-ink-2)]">Cross-Track Half FOV</span>
+                          <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
+                            {selectedSat.sensor.fov.cross_half_deg.toFixed(1)}°
+                          </span>
                         </div>
-                      </>
+                        <input
+                          aria-label="Cross-track half FOV"
+                          type="range"
+                          min={1}
+                          max={35}
+                          step={0.5}
+                          value={selectedSat.sensor.fov.cross_half_deg}
+                          onChange={(e) =>
+                            updateSelectedSat((s) => ({
+                              ...s,
+                              sensor: {
+                                ...s.sensor,
+                                fov: {
+                                  type: 'rectangular',
+                                  cross_half_deg: Number(e.target.value),
+                                  along_half_deg:
+                                    s.sensor.fov.type === 'rectangular'
+                                      ? s.sensor.fov.along_half_deg
+                                      : 1.0,
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full"
+                        />
+                      </div>
                     ) : (
                       <div>
-                        <div className="flex justify-between text-[11px]">
-                          <span>รัศมีกรวยเซนเซอร์ (Cone Half-Angle)</span>
-                          <span className="font-mono text-sky-300">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[var(--color-ink-2)]">Cone Half-Angle</span>
+                          <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                             {selectedSat.sensor.fov.half_angle_deg.toFixed(1)}°
                           </span>
                         </div>
                         <input
+                          aria-label="Cone half angle"
                           type="range"
                           min={1}
                           max={35}
@@ -1272,24 +1404,25 @@ export const App: React.FC = () => {
                               },
                             }))
                           }
-                          className="w-full accent-sky-400"
+                          className="w-full"
                         />
                       </div>
                     )}
 
                     {/* Optics GSD Parameters */}
-                    <div className="pt-2 border-t border-slate-800 space-y-2">
-                      <div className="font-semibold text-slate-300 text-[11px]">
-                        เลนส์ออปติกส์ & คำนวณความละเอียดภาพ (GSD)
+                    <div className="pt-2.5 border-t border-[var(--color-rule)] space-y-2.5">
+                      <div className="font-medium text-[var(--color-ink)]">
+                        Optics & GSD Calculator
                       </div>
                       <div>
-                        <div className="flex justify-between text-[11px]">
-                          <span>ความยาวโฟกัส (Focal Length f)</span>
-                          <span className="font-mono text-emerald-400">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[var(--color-ink-2)]">Focal Length (f)</span>
+                          <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                             {selectedSat.sensor.focal_mm.toFixed(0)} mm
                           </span>
                         </div>
                         <input
+                          aria-label="Sensor focal length"
                           type="range"
                           min={100}
                           max={6000}
@@ -1301,30 +1434,30 @@ export const App: React.FC = () => {
                               sensor: { ...s.sensor, focal_mm: Number(e.target.value) },
                             }))
                           }
-                          className="w-full accent-emerald-400"
+                          className="w-full"
                         />
                       </div>
 
-                      <div className="p-2 rounded bg-slate-900 border border-slate-800 space-y-1 text-[11px]">
+                      <div className="p-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-rule)] space-y-1 text-xs">
                         <div className="flex justify-between">
-                          <span className="text-slate-400">ความละเอียดภาพ (GSD):</span>
-                          <span className="font-mono font-bold text-emerald-400">
+                          <span className="text-[var(--color-muted)]">Ground Sample Distance</span>
+                          <span className="font-mono-num font-semibold text-[var(--color-accent-deep)]">
                             {currentTelemetry.sensor.gsdMeters
-                              ? `${currentTelemetry.sensor.gsdMeters.toFixed(2)} เมตร/พิกเซล`
+                              ? `${currentTelemetry.sensor.gsdMeters.toFixed(2)} m/px`
                               : '—'}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">ความกว้างแนวถ่ายภาพ (Swath):</span>
-                          <span className="font-mono font-bold text-amber-300">
+                          <span className="text-[var(--color-muted)]">Swath Width</span>
+                          <span className="font-mono-num font-semibold text-[var(--color-ink)]">
                             {currentTelemetry.sensor.swathWidthKm
                               ? `${currentTelemetry.sensor.swathWidthKm.toFixed(1)} km`
                               : '—'}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">มุมเอียงปัจจุบัน (Off-Nadir):</span>
-                          <span className="font-mono font-bold text-sky-300">
+                          <span className="text-[var(--color-muted)]">Current Off-Nadir</span>
+                          <span className="font-mono-num font-semibold text-[var(--color-ink)]">
                             {currentTelemetry.sensor.offNadirDeg.toFixed(1)}°
                           </span>
                         </div>
@@ -1336,85 +1469,88 @@ export const App: React.FC = () => {
 
               {/* TAB 3: EDUCATIONAL VECTORS & FORMULA GUIDE */}
               {rightTab === 'coverage' && (
-                <div className="p-3 space-y-3">
-                  <div className="font-bold text-sky-400">
-                    📐 ตัวช่วยสื่อการสอน (3D Vectors & Orbital Formulas)
+                <div className="p-3.5 space-y-4">
+                  <div className="flex items-center gap-1.5 font-display font-semibold text-sm text-[var(--color-ink)]">
+                    <Compass className="w-4 h-4 text-[var(--color-accent)]" />
+                    <span>3D Vectors & Orbital Guide</span>
                   </div>
 
-                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-2 text-[11px]">
-                    <div className="font-semibold text-slate-200">
-                      เปิด/ปิดเลเยอร์การสอนบนลูกโลก 3D
+                  <div className="bg-[var(--color-paper)] p-3 rounded-xl border border-[var(--color-rule)] space-y-2.5 text-xs">
+                    <div className="font-medium text-[var(--color-ink)]">
+                      3D Globe Reference Layers
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer text-[var(--color-ink-2)]">
                       <input
                         type="checkbox"
                         checked={vectorVis.showEciAxes}
                         onChange={(e) =>
                           setVectorVis((v) => ({ ...v, showEciAxes: e.target.checked }))
                         }
-                        className="accent-sky-400"
+                        className="accent-[var(--color-accent)]"
                       />
-                      <span>แกนพิกัดเฉื่อย ECI (ชี้จุด Vernal Equinox ♈)</span>
+                      <span>ECI Inertial Axes (Vernal Equinox)</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer text-[var(--color-ink-2)]">
                       <input
                         type="checkbox"
                         checked={vectorVis.showEcefAxes}
                         onChange={(e) =>
                           setVectorVis((v) => ({ ...v, showEcefAxes: e.target.checked }))
                         }
-                        className="accent-sky-400"
+                        className="accent-[var(--color-accent)]"
                       />
-                      <span>แกนพิกัดหมุนตามโลก ECEF (ชี้เมอริเดียน 0°)</span>
+                      <span>ECEF Earth-Fixed Axes (0° Greenwich)</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer text-[var(--color-ink-2)]">
                       <input
                         type="checkbox"
                         checked={vectorVis.showSatBodyVectors}
                         onChange={(e) =>
                           setVectorVis((v) => ({ ...v, showSatBodyVectors: e.target.checked }))
                         }
-                        className="accent-sky-400"
+                        className="accent-[var(--color-accent)]"
                       />
-                      <span>เวกเตอร์ประจำตัวดาวเทียม (Velocity, Nadir, Sun)</span>
+                      <span>Satellite Body Vectors (Velocity, Nadir, Sun)</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer text-[var(--color-ink-2)]">
                       <input
                         type="checkbox"
                         checked={vectorVis.showOrbitalPlane}
                         onChange={(e) =>
                           setVectorVis((v) => ({ ...v, showOrbitalPlane: e.target.checked }))
                         }
-                        className="accent-sky-400"
+                        className="accent-[var(--color-accent)]"
                       />
-                      <span>แผ่นระนาบวงโคจร 3D (แสดงมุม i และ RAAN Ω)</span>
+                      <span>3D Orbital Plane Disc (Inclination & RAAN)</span>
                     </label>
                   </div>
 
-                  {/* Educational Concept Cards */}
-                  <div className="space-y-2 text-[11px]">
-                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                      <div className="font-bold text-amber-300">
-                        💡 ทำไมดาวเทียมสำรวจโลกจึงใช้วงโคจร SSO?
+                  {/* Educational Concept Notes */}
+                  <div className="space-y-2.5 text-xs">
+                    <div className="p-3 rounded-xl bg-[var(--color-paper)] border border-[var(--color-rule)] space-y-1.5">
+                      <div className="font-medium text-[var(--color-ink)] flex items-center gap-1.5">
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Why Sun-Synchronous Orbits (SSO)?</span>
                       </div>
-                      <p className="text-slate-300 leading-relaxed">
-                        โลกแป้นที่เส้นศูนย์สูตร (<span className="font-mono">J2 = 1.0826×10⁻³</span>)
-                        เมื่อตั้งมุมเอียงวงโคจร <span className="font-mono">i ≈ 98°</span>{' '}
-                        ระนาบวงโคจรจะหมุนตามดวงอาทิตย์วันละ <span className="font-mono">0.9856°</span>{' '}
-                        พอดี ทำให้ดาวเทียมบินผ่านประเทศไทยในเวลาท้องถิ่นเดิมทุกวัน!
+                      <p className="text-[var(--color-ink-2)] leading-relaxed">
+                        Earth's equatorial bulge (<span className="font-mono-num">J2 = 1.0826×10⁻³</span>)
+                        precesses an orbit at inclination <span className="font-mono-num">i ≈ 98°</span> by{' '}
+                        <span className="font-mono-num">0.9856°/day</span>, keeping local solar lighting
+                        consistent across every daily revisit.
                       </p>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                      <div className="font-bold text-emerald-300">
-                        📏 สูตรความละเอียดภาพถ่ายดาวเทียม (GSD)
+                    <div className="p-3 rounded-xl bg-[var(--color-paper)] border border-[var(--color-rule)] space-y-1.5">
+                      <div className="font-medium text-[var(--color-ink)] flex items-center gap-1.5">
+                        <Ruler className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                        <span>Ground Sample Distance (GSD)</span>
                       </div>
-                      <p className="text-slate-300 font-mono text-[10px] bg-slate-900 p-1.5 rounded">
+                      <p className="text-[var(--color-ink)] font-mono-num text-xs bg-[var(--color-surface)] border border-[var(--color-rule)] p-2 rounded-lg">
                         GSD = (Slant Range × Pixel Pitch) / Focal Length
                       </p>
-                      <p className="text-slate-400 leading-relaxed">
-                        ยิ่งดาวเทียมเอียงกล้อง (Off-Nadir Slew) มากเท่าไร ระยะห่างตามแนวสายตา (Slant Range)
-                        จะเพิ่มขึ้น ทำให้ค่า GSD กว้างขึ้นเล็กน้อยแลกกับการถ่ายซ้ำเป้าหมายได้เร็วขึ้น
+                      <p className="text-[var(--color-ink-2)] leading-relaxed">
+                        Increasing off-nadir slew lengthens the slant range, trading slightly coarser GSD
+                        for faster target revisit opportunities.
                       </p>
                     </div>
                   </div>
@@ -1425,7 +1561,7 @@ export const App: React.FC = () => {
         </aside>
       </div>
 
-      {/* BOTTOM: STK GANTT TIMELINE & ACCESS REPORT */}
+      {/* BOTTOM: MISSION TIMELINE & ACCESS REPORT */}
       <GanttTimelineBar
         simTimeMs={simTimeMs}
         windowStartMs={windowStartMs}
@@ -1437,41 +1573,47 @@ export const App: React.FC = () => {
 
       {/* CELESTRAK LIVE SEARCH & OFFLINE SATELLITE CATALOG MODAL */}
       {showCatalogModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-2xl max-w-2xl w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3">
               <div>
-                <h2 className="font-bold text-base text-sky-400">
-                  🛰️ คลังดาวเทียมจริง (CelesTrak Live Search & Offline Catalog)
+                <h2 className="font-display font-bold text-lg text-[var(--color-ink)] flex items-center gap-2">
+                  <Satellite className="w-4 h-4 text-[var(--color-accent)]" />
+                  <span>Satellite Catalog & CelesTrak Search</span>
                 </h2>
-                <p className="text-xs text-slate-400">
-                  เลือกดาวเทียมสำรวจโลกจากฐานข้อมูลในเครื่อง หรือค้นหาออนไลน์จาก CelesTrak
+                <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                  Select an offline Earth observation satellite or query live TLE data from CelesTrak.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowCatalogModal(false)}
-                className="text-slate-400 hover:text-white px-2 py-1 text-sm"
+                className="p-1.5 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-2)] transition-colors"
+                aria-label="Close catalog modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Search Input */}
             <div className="flex gap-2">
               <input
+                aria-label="Search satellite name or NORAD ID"
                 type="text"
                 value={catalogQuery}
                 onChange={(e) => setCatalogQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchCatalog()}
-                placeholder="พิมพ์ชื่อดาวเทียมหรือ NORAD ID เช่น THEOS, SENTINEL, LANDSAT, ISS, 25544..."
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-sky-400"
+                placeholder="Search name or NORAD ID (e.g. THEOS, SENTINEL, LANDSAT, ISS, 25544)..."
+                className="flex-1 bg-[var(--color-paper)] border border-[var(--color-rule)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
               />
               <button
+                type="button"
                 onClick={handleSearchCatalog}
                 disabled={catalogLoading}
-                className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs"
+                className="px-4 py-2 rounded-xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-deep)] text-[var(--color-accent-ink)] font-medium text-xs flex items-center gap-1.5 transition-colors"
               >
-                {catalogLoading ? 'กำลังค้นหา...' : '🔍 ค้นหา CelesTrak'}
+                <Search className="w-3.5 h-3.5" />
+                <span>{catalogLoading ? 'Searching...' : 'Search CelesTrak'}</span>
               </button>
             </div>
 
@@ -1480,34 +1622,38 @@ export const App: React.FC = () => {
               {catalogResults.map((entry) => (
                 <div
                   key={entry.id}
-                  className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-500/50 flex items-center justify-between gap-4"
+                  className="p-3 rounded-xl bg-[var(--color-paper)] border border-[var(--color-rule)] hover:border-[var(--color-accent)] flex items-center justify-between gap-4 transition-colors"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-white">{entry.name}</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-sky-300 font-mono text-[10px]">
+                      <span className="font-display font-semibold text-sm text-[var(--color-ink)]">
+                        {entry.name}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--color-surface)] border border-[var(--color-rule)] text-[var(--color-ink-2)] font-mono-num text-xs">
                         NORAD {entry.norad_id}
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[10px]">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-deep)] text-xs font-medium">
                         {entry.category}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">{entry.description_th}</p>
+                    <p className="text-xs text-[var(--color-muted)]">{entry.description_en}</p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => handleAddFromCatalog(entry)}
-                    className="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shrink-0"
+                    className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-deep)] text-[var(--color-accent-ink)] font-medium text-xs shrink-0 flex items-center gap-1 transition-colors"
                   >
-                    + เพิ่มเข้าฉาก
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
                   </button>
                 </div>
               ))}
             </div>
 
             {/* Paste Custom 2-Line / 3-Line TLE */}
-            <div className="pt-3 border-t border-slate-800 space-y-2">
-              <div className="text-xs font-semibold text-slate-300">
-                หรือวางข้อความ TLE (2 หรือ 3 บรรทัด) โดยตรง:
+            <div className="pt-3 border-t border-[var(--color-rule)] space-y-2">
+              <div className="text-xs font-medium text-[var(--color-ink)]">
+                Or paste a 2-line / 3-line TLE directly:
               </div>
               <div className="flex gap-2">
                 <textarea
@@ -1515,13 +1661,15 @@ export const App: React.FC = () => {
                   value={customTleText}
                   onChange={(e) => setCustomTleText(e.target.value)}
                   placeholder={'THEOS-2\n1 58017U 23155A ...\n2 58017  97.8712 ...'}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-2 text-[11px] font-mono text-slate-200"
+                  className="flex-1 bg-[var(--color-paper)] border border-[var(--color-rule)] rounded-xl p-2.5 text-xs font-mono-num text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
                 />
                 <button
+                  type="button"
                   onClick={handleAddCustomTle}
-                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 font-semibold text-xs"
+                  className="px-3.5 py-2 rounded-xl bg-[var(--color-surface-muted)] hover:bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-ink)] font-medium text-xs flex items-center gap-1.5 transition-colors"
                 >
-                  + นำเข้า TLE
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Import TLE</span>
                 </button>
               </div>
             </div>

@@ -1,8 +1,10 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Dose (deal 2/3, seed stellarscope-ssslab-bright-white-aerospace-447d·5dd18a2d·2026-11-12·r0) · redesign: full
+ * nav: top command ribbon · signature: synchronized 3D globe, 2D ground track, sensor PiP and Gantt timeline · states: loading, empty, error, full · dose: white
+ * axes: light/grotesk-sans/chromatic-green · posture: committed · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R4 V5 · weakest: E, dense aerospace controls risk crowding; opened panel spacing and grouped vector toggles cleanly */
+@import url("./tokens.css");
+@import url("./base.css");
 @import "tailwindcss";
-
-* {
-  box-sizing: border-box;
-}
 
 html,
 body,
@@ -11,9 +13,54 @@ body,
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #020617;
-  color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, 'Sarabun', 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-num {
+  font-family: var(--font-outlier);
+  font-variant-numeric: tabular-nums;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Custom range slider for crisp light-mode aerospace controls */
+input[type="range"] {
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* Subtle light-mode scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
 }
 
 /* Hide Cesium bottom credit bar clutter for clean educational presentation */

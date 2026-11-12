@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OrbitScope",
+  "productName": "StellarScope-SSSLab",
   "version": "2.0.0",
-  "identifier": "org.ssslab.orbitscope",
+  "identifier": "org.ssslab.stellarscope",
   "build": {
     "beforeBuildCommand": "npm --prefix ../../ui run build",
     "frontendDist": "../../ui/dist"
@@ -10,7 +10,7 @@
   "app": {
     "windows": [
       {
-        "title": "OrbitScope 2.0 — STK-Style Satellite Tracking & Earth Observation Simulator",
+        "title": "StellarScope-SSSLab — 2D/3D Satellite Tracking & Earth Observation Simulator",
         "width": 1600,
         "height": 960,
         "minWidth": 1100,

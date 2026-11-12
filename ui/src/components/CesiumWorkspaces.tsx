@@ -2,6 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import {
+  Camera,
+  Compass,
+  Crosshair,
+  Download,
+  Globe,
+  MapPin,
+  Video,
+  X,
+} from 'lucide-react';
+import {
   AreaCoverageSummary,
   AreaTargetObject,
   computeBodyAxes,
@@ -133,9 +143,11 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
       }
     });
 
+    viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+    viewer.scene.postProcessStages.fxaa.enabled = true;
     viewer.scene.globe.enableLighting = true;
     viewer.scene.globe.showGroundAtmosphere = true;
-    viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#030712');
+    viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#07101e');
 
     // Initial camera looking at Thailand / Asia
     viewer.camera.setView({
@@ -242,6 +254,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
         webgl: { preserveDrawingBuffer: true },
       },
     });
+    pipViewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+    pipViewer.scene.postProcessStages.fxaa.enabled = true;
 
     Cesium.SingleTileImageryProvider.fromUrl('/assets/earth.png', {
       rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
@@ -314,8 +328,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
           outlineWidth: 2,
         },
         label: {
-          text: `📡 ${gs.name}`,
-          font: '600 12px sans-serif',
+          text: gs.name,
+          font: '600 12px "Instrument Sans", sans-serif',
           fillColor: hexToCesiumColor(gs.color, 1),
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 3,
@@ -355,8 +369,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
           outlineWidth: 2,
         },
         label: {
-          text: `🎯 ${tgt.name}`,
-          font: '600 12px sans-serif',
+          text: tgt.name,
+          font: '600 12px "Instrument Sans", sans-serif',
           fillColor: Cesium.Color.fromCssColorString('#fdba74'),
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 3,
@@ -412,8 +426,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
           outlineWidth: isSelected ? 3 : 1.5,
         },
         label: {
-          text: `🛰️ ${sat.name}`,
-          font: isSelected ? 'bold 13px sans-serif' : '12px sans-serif',
+          text: sat.name,
+          font: isSelected ? '700 13px "Instrument Sans", sans-serif' : '500 12px "Instrument Sans", sans-serif',
           fillColor: satColor,
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 3,
@@ -610,7 +624,7 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
       const xEci = temeToEcef({ x: axisLenKm, y: 0, z: 0 }, currentDate);
       const yEci = temeToEcef({ x: 0, y: axisLenKm, z: 0 }, currentDate);
       const zEci = { x: 0, y: 0, z: axisLenKm };
-      addVectorArrow(origin, xEci, Cesium.Color.fromCssColorString('#ef4444'), 'X_ECI (Vernal Equinox ♈)');
+      addVectorArrow(origin, xEci, Cesium.Color.fromCssColorString('#ef4444'), 'X_ECI (Vernal Equinox)');
       addVectorArrow(origin, yEci, Cesium.Color.fromCssColorString('#22c55e'), 'Y_ECI');
       addVectorArrow(origin, zEci, Cesium.Color.fromCssColorString('#3b82f6'), 'Z_ECI (Celestial North)');
     }
@@ -653,7 +667,7 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
         state.rEcef,
         v3.add(state.rEcef, v3.scale(sunEcef, vLen)),
         Cesium.Color.fromCssColorString('#fde047'),
-        '☀ Sun Vector'
+        'Sun Vector'
       );
     }
 
@@ -764,8 +778,17 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const w = canvas.width;
-    const h = canvas.height;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(300, Math.round(rect.width || 1200));
+    const h = Math.max(200, Math.round(rect.height || 600));
+    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, w, h);
 
     const lonToX = (lon: number) => ((lon + 180) / 360) * w;
@@ -854,34 +877,46 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
     for (const gs of stations) {
       const x = lonToX(gs.lon);
       const y = latToY(gs.lat);
+      ctx.strokeStyle = gs.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+
       ctx.fillStyle = gs.color;
       ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(`📡 ${gs.name}`, x + 8, y + 4);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '600 11px "Instrument Sans", sans-serif';
+      ctx.fillText(gs.name, x + 11, y + 4);
     }
 
     // 6. Point Targets
     for (const tgt of targets) {
       const x = lonToX(tgt.lon);
       const y = latToY(tgt.lat);
-      ctx.fillStyle = tgt.color;
-      ctx.beginPath();
-      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#fef08a';
+      ctx.strokeStyle = '#fde047';
       ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 7, y);
+      ctx.lineTo(x + 7, y);
+      ctx.moveTo(x, y - 7);
+      ctx.lineTo(x, y + 7);
       ctx.stroke();
 
+      ctx.fillStyle = tgt.color;
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.fillStyle = '#fed7aa';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(`🎯 ${tgt.name}`, x + 8, y - 4);
+      ctx.font = '600 11px "Instrument Sans", sans-serif';
+      ctx.fillText(tgt.name, x + 10, y - 4);
     }
 
     // 7. Satellites: Ground Track, Swath, Footprint & Current Position
@@ -941,8 +976,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
       ctx.stroke();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = isSelected ? 'bold 12px sans-serif' : '11px sans-serif';
-      ctx.fillText(`🛰️ ${sat.name}`, sx + 9, sy - 6);
+      ctx.font = isSelected ? '700 12px "Instrument Sans", sans-serif' : '500 11px "Instrument Sans", sans-serif';
+      ctx.fillText(sat.name, sx + 10, sy - 6);
     }
   }, [
     simTimeMs,
@@ -988,12 +1023,12 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
   };
 
   return (
-    <div className="relative flex-1 flex h-full w-full bg-slate-950 overflow-hidden">
+    <div className="relative flex-1 flex h-full w-full bg-[var(--color-paper)] overflow-hidden">
       {/* 3D GLOBE VIEWPORT */}
       <div
         className={`relative h-full ${
           viewLayout === 'split_3d_2d'
-            ? 'w-1/2 border-r border-slate-800'
+            ? 'w-1/2 border-r border-[var(--color-rule)]'
             : viewLayout === 'only_3d'
             ? 'w-full'
             : 'hidden'
@@ -1002,21 +1037,24 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
         <div ref={globeContainerRef} className="w-full h-full" />
 
         {/* 3D Viewport Top Badge & Camera Controls */}
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-lg text-xs">
-          <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-          <span className="font-semibold text-slate-100">3D WGS84 Globe</span>
-          <span className="text-slate-400">|</span>
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-[var(--color-surface)]/92 backdrop-blur-md border border-[var(--color-rule)] shadow-sm px-3 py-1.5 rounded-xl text-xs text-[var(--color-ink)]">
+          <Globe className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+          <span className="font-display font-semibold">3D WGS84 Globe</span>
+          <span className="text-[var(--color-rule)]">|</span>
           <button
+            type="button"
             onClick={() => onToggleCameraFollow(!cameraFollowSat)}
-            className={`px-2 py-0.5 rounded font-medium transition ${
+            className={`px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               cameraFollowSat
-                ? 'bg-sky-500 text-slate-950'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-[var(--color-accent)] text-[var(--color-accent-ink)]'
+                : 'bg-[var(--color-surface-muted)] text-[var(--color-ink-2)] hover:bg-[var(--color-paper-2)]'
             }`}
           >
-            {cameraFollowSat ? '🎥 กำลังเกาะติดดาวเทียม' : '🎥 เกาะติดดาวเทียม'}
+            <Video className="w-3.5 h-3.5" />
+            <span>{cameraFollowSat ? 'Following Satellite' : 'Follow Satellite'}</span>
           </button>
           <button
+            type="button"
             onClick={() => {
               onToggleCameraFollow(false);
               viewerRef.current?.camera.flyTo({
@@ -1024,9 +1062,10 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
                 duration: 1.0,
               });
             }}
-            className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+            className="px-2.5 py-1 rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-ink-2)] hover:bg-[var(--color-paper-2)] font-medium flex items-center gap-1.5 transition-colors"
           >
-            🌏 มองประเทศไทย
+            <MapPin className="w-3.5 h-3.5 text-[var(--color-muted)]" />
+            <span>Focus Thailand</span>
           </button>
         </div>
 
@@ -1035,31 +1074,32 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
           vectorVis.showEcefAxes ||
           vectorVis.showSatBodyVectors ||
           vectorVis.showOrbitalPlane) && (
-          <div className="absolute bottom-3 left-3 z-10 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-lg px-3 py-2 text-[11px] space-y-1 max-w-xs">
-            <div className="font-semibold text-sky-400">
-              📐 สัญลักษณ์เวกเตอร์การสอน (3D Vector Geometry)
+          <div className="absolute bottom-3 left-3 z-10 bg-[var(--color-surface)]/92 backdrop-blur-md border border-[var(--color-rule)] shadow-sm rounded-xl px-3.5 py-2.5 text-xs space-y-1 max-w-xs text-[var(--color-ink-2)]">
+            <div className="font-display font-semibold text-[var(--color-ink)] flex items-center gap-1.5">
+              <Compass className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+              <span>3D Vector Geometry</span>
             </div>
             {vectorVis.showEciAxes && (
-              <div className="text-slate-300">
-                • <span className="text-red-400 font-semibold">X_ECI</span> ชี้จุดวสันตวิษุวัต (ไม่หมุนตามโลก)
+              <div>
+                <span className="text-red-600 font-semibold">X_ECI</span> points to Vernal Equinox (inertial)
               </div>
             )}
             {vectorVis.showEcefAxes && (
-              <div className="text-slate-300">
-                • <span className="text-orange-400 font-semibold">X_ECEF</span> ชี้เมอริเดียนแรก 0° (หมุนตามโลก)
+              <div>
+                <span className="text-orange-600 font-semibold">X_ECEF</span> points to 0° Greenwich (Earth-fixed)
               </div>
             )}
             {vectorVis.showSatBodyVectors && (
-              <div className="text-slate-300">
-                • <span className="text-green-400 font-semibold">V</span> ความเร็ว |{' '}
-                <span className="text-sky-400 font-semibold">Nadir</span> ชี้ศูนย์กลางโลก |{' '}
-                <span className="text-yellow-300 font-semibold">☀ Sun</span> ทิศดวงอาทิตย์
+              <div>
+                <span className="text-emerald-700 font-semibold">V</span> Velocity |{' '}
+                <span className="text-sky-700 font-semibold">Nadir</span> Earth-center |{' '}
+                <span className="text-amber-600 font-semibold">Sun</span> Solar dir
               </div>
             )}
             {vectorVis.showOrbitalPlane && selectedBundle && (
-              <div className="text-slate-300">
-                • ระนาบวงโคจร: <span className="text-rose-400 font-semibold">i = {selectedBundle.sat.keplerian.inclination_deg.toFixed(2)}°</span>,{' '}
-                <span className="text-sky-300 font-semibold">RAAN Ω = {selectedBundle.sat.keplerian.raan_deg.toFixed(1)}°</span>
+              <div>
+                Plane: <span className="text-rose-600 font-semibold font-mono-num">i = {selectedBundle.sat.keplerian.inclination_deg.toFixed(2)}°</span>,{' '}
+                <span className="text-sky-700 font-semibold font-mono-num">RAAN = {selectedBundle.sat.keplerian.raan_deg.toFixed(1)}°</span>
               </div>
             )}
           </div>
@@ -1068,7 +1108,7 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
 
       {/* 2D SYNCHRONIZED TACTICAL MAP VIEWPORT */}
       <div
-        className={`relative h-full bg-slate-950 flex flex-col ${
+        className={`relative h-full bg-[var(--color-space-canvas)] flex flex-col ${
           viewLayout === 'split_3d_2d'
             ? 'w-1/2'
             : viewLayout === 'only_2d'
@@ -1076,38 +1116,35 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
             : 'hidden'
         }`}
       >
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-lg text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="font-semibold text-slate-100">
-            2D Ground Track & Coverage Map
-          </span>
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-[var(--color-surface)]/92 backdrop-blur-md border border-[var(--color-rule)] shadow-sm px-3 py-1.5 rounded-xl text-xs text-[var(--color-ink)]">
+          <span className="w-2 h-2 rounded-full bg-[var(--color-accent)]" />
+          <span className="font-display font-semibold">2D Ground Track & Coverage Map</span>
           {mapClickMode !== 'none' && (
-            <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400 text-amber-300 font-medium">
-              คลิกบนแผนที่เพื่อวางจุด ({mapClickMode})
+            <span className="px-2 py-0.5 rounded-md bg-amber-100 border border-amber-300 text-amber-800 font-medium">
+              Click map to place ({mapClickMode.replace('_', ' ')})
             </span>
           )}
         </div>
 
         <canvas
           ref={map2dCanvasRef}
-          width={1200}
-          height={600}
+          aria-label="Synchronized 2D satellite ground track and coverage map"
           onClick={handle2DMapClick}
-          className={`w-full h-full object-fill ${
+          className={`w-full h-full block ${
             mapClickMode !== 'none' ? 'cursor-crosshair' : 'cursor-pointer'
           }`}
         />
 
         {/* Area Coverage Badge on 2D Map */}
         {areaCoverage && (
-          <div className="absolute bottom-3 left-3 z-10 bg-slate-900/90 backdrop-blur-md border border-purple-500/50 rounded-lg px-3 py-2 text-xs flex items-center gap-3">
+          <div className="absolute bottom-3 left-3 z-10 bg-[var(--color-surface)]/94 backdrop-blur-md border border-[var(--color-rule)] shadow-sm rounded-xl px-3.5 py-2 text-xs flex items-center gap-4">
             <div>
-              <div className="text-purple-300 font-semibold">{areaTarget.name}</div>
-              <div className="text-slate-400 text-[11px]">
-                ครอบคลุม {areaCoverage.covered_cells}/{areaCoverage.total_cells} กริดย่อย
+              <div className="text-[var(--color-ink)] font-semibold">{areaTarget.name}</div>
+              <div className="text-[var(--color-muted)] text-xs font-mono-num">
+                {areaCoverage.covered_cells}/{areaCoverage.total_cells} grid cells covered
               </div>
             </div>
-            <div className="text-lg font-bold text-emerald-400">
+            <div className="text-lg font-display font-bold font-mono-num text-[var(--color-accent)]">
               {areaCoverage.coverage_percent.toFixed(1)}%
             </div>
           </div>
@@ -1116,64 +1153,67 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
 
       {/* SIMULATED SENSOR / PAYLOAD CAMERA VIEW (Picture-in-Picture) */}
       {showSensorPiP && selectedBundle && (
-        <div className="absolute bottom-3 right-3 z-20 w-80 h-60 bg-slate-950/95 border-2 border-sky-500/80 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="absolute bottom-3 right-3 z-20 w-84 h-64 bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-2xl shadow-lg overflow-hidden flex flex-col">
           {/* PiP Header */}
-          <div className="bg-slate-900/95 px-3 py-1.5 border-b border-slate-800 flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5 font-semibold text-sky-300 truncate">
-              <span>📷 มุมมองกล้องดาวเทียม:</span>
-              <span className="text-white truncate">{selectedBundle.sat.name}</span>
+          <div className="bg-[var(--color-paper)] px-3 py-2 border-b border-[var(--color-rule)] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5 font-medium text-[var(--color-ink)] truncate">
+              <Camera className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+              <span className="truncate">{selectedBundle.sat.name}</span>
             </div>
             <button
+              type="button"
               onClick={captureSensorSnapshot}
-              className="px-2 py-0.5 rounded bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-[10px] transition"
-              title="ถ่ายภาพจำลองจากกล้องดาวเทียม ณ เวลานี้"
+              className="px-2.5 py-1 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-deep)] text-[var(--color-accent-ink)] font-medium text-xs flex items-center gap-1 transition-colors shrink-0"
+              title="Capture simulated payload image"
             >
-              📸 ถ่ายภาพ
+              <Camera className="w-3 h-3" />
+              <span>Capture</span>
             </button>
           </div>
 
           {/* 3D Sensor Camera Canvas */}
-          <div className="relative flex-1 w-full h-full">
+          <div className="relative flex-1 w-full h-full bg-[var(--color-space-canvas)]">
             <div ref={pipContainerRef} className="w-full h-full" />
 
             {/* Optical / SAR Reticle Crosshair HUD Overlay */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="w-36 h-24 border border-sky-400/70 relative">
-                <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-sky-300" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-sky-300" />
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-sky-300" />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-sky-300" />
-                <div className="absolute inset-x-0 top-1/2 h-px bg-sky-400/40" />
-                <div className="absolute inset-y-0 left-1/2 w-px bg-sky-400/40" />
+              <div className="w-36 h-24 border border-emerald-400/75 relative">
+                <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-emerald-300" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-emerald-300" />
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-emerald-300" />
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-emerald-300" />
+                <div className="absolute inset-x-0 top-1/2 h-px bg-emerald-400/40" />
+                <div className="absolute inset-y-0 left-1/2 w-px bg-emerald-400/40" />
               </div>
             </div>
 
             {/* Target Lock Banner */}
             {selectedBundle.telemetry.lockedTargetName && (
-              <div className="pointer-events-none absolute top-2 left-2 bg-amber-500/90 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded shadow">
-                🎯 LOCKED: {selectedBundle.telemetry.lockedTargetName}
+              <div className="pointer-events-none absolute top-2 left-2 bg-amber-500 text-white font-semibold text-xs px-2 py-0.5 rounded-md shadow flex items-center gap-1">
+                <Crosshair className="w-3 h-3" />
+                <span>Locked: {selectedBundle.telemetry.lockedTargetName}</span>
               </div>
             )}
 
             {/* Telemetry Readout Footer inside PiP */}
-            <div className="pointer-events-none absolute bottom-0 inset-x-0 bg-slate-950/85 backdrop-blur-sm px-2.5 py-1 text-[10px] text-slate-200 grid grid-cols-3 gap-1 border-t border-slate-800/80">
+            <div className="pointer-events-none absolute bottom-0 inset-x-0 bg-[var(--color-surface)]/92 backdrop-blur-sm px-3 py-1.5 text-xs text-[var(--color-ink)] grid grid-cols-3 gap-1 border-t border-[var(--color-rule)]">
               <div>
-                <span className="text-slate-400">GSD: </span>
-                <span className="font-mono text-emerald-400 font-semibold">
+                <span className="text-[var(--color-muted)]">GSD </span>
+                <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                   {selectedBundle.telemetry.gsdMeters
                     ? `${selectedBundle.telemetry.gsdMeters.toFixed(2)} m`
                     : '—'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400">Off-Nadir: </span>
-                <span className="font-mono text-sky-300 font-semibold">
+                <span className="text-[var(--color-muted)]">Off-Nadir </span>
+                <span className="font-mono-num text-[var(--color-ink)] font-medium">
                   {selectedBundle.telemetry.offNadirDeg.toFixed(1)}°
                 </span>
               </div>
               <div>
-                <span className="text-slate-400">Swath: </span>
-                <span className="font-mono text-amber-300 font-semibold">
+                <span className="text-[var(--color-muted)]">Swath </span>
+                <span className="font-mono-num text-[var(--color-ink)] font-medium">
                   {selectedBundle.telemetry.swathWidthKm
                     ? `${selectedBundle.telemetry.swathWidthKm.toFixed(0)} km`
                     : '—'}
@@ -1186,44 +1226,50 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
 
       {/* Captured Snapshot Modal */}
       {snapshotUrl && selectedBundle && (
-        <div className="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-4 shadow-2xl space-y-3">
+        <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <div className="font-bold text-sky-400 text-sm">
-                📸 ภาพถ่ายจำลองจากดาวเทียม {selectedBundle.sat.name}
+              <div className="font-display font-bold text-[var(--color-ink)] text-base flex items-center gap-2">
+                <Camera className="w-4 h-4 text-[var(--color-accent)]" />
+                <span>Simulated Capture: {selectedBundle.sat.name}</span>
               </div>
               <button
+                type="button"
                 onClick={() => setSnapshotUrl(null)}
-                className="text-slate-400 hover:text-white text-xs px-2 py-1"
+                className="p-1.5 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-2)] transition-colors"
+                aria-label="Close snapshot preview"
               >
-                ✕ ปิด
+                <X className="w-4 h-4" />
               </button>
             </div>
             <img
               src={snapshotUrl}
               alt="Simulated Satellite Capture"
-              className="w-full rounded-lg border border-slate-700"
+              className="w-full rounded-xl border border-[var(--color-rule)]"
             />
-            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-              <div>
-                เวลาถ่ายภาพ: <span className="font-mono text-slate-200">{currentDate.toISOString().slice(0, 19)} UTC</span>
+            <div className="grid grid-cols-2 gap-2.5 text-xs bg-[var(--color-paper)] p-3 rounded-xl border border-[var(--color-rule)]">
+              <div className="text-[var(--color-muted)]">
+                Capture UTC:{' '}
+                <span className="font-mono-num text-[var(--color-ink)] font-medium">
+                  {currentDate.toISOString().slice(0, 19)}
+                </span>
               </div>
-              <div>
-                ความละเอียด GSD:{' '}
-                <span className="font-mono text-emerald-400">
+              <div className="text-[var(--color-muted)]">
+                GSD:{' '}
+                <span className="font-mono-num text-[var(--color-accent-deep)] font-medium">
                   {selectedBundle.telemetry.gsdMeters?.toFixed(2) ?? '—'} m/px
                 </span>
               </div>
-              <div>
-                มุมเอียง Slew (Roll/Pitch):{' '}
-                <span className="font-mono text-sky-300">
+              <div className="text-[var(--color-muted)]">
+                Slew (Roll/Pitch):{' '}
+                <span className="font-mono-num text-[var(--color-ink)] font-medium">
                   {selectedBundle.telemetry.activeRollDeg.toFixed(1)}° /{' '}
                   {selectedBundle.telemetry.activePitchDeg.toFixed(1)}°
                 </span>
               </div>
-              <div>
-                มุมเงยดวงอาทิตย์:{' '}
-                <span className="font-mono text-amber-300">
+              <div className="text-[var(--color-muted)]">
+                Sun Elevation:{' '}
+                <span className="font-mono-num text-[var(--color-ink)] font-medium">
                   {selectedBundle.telemetry.sunElevationAtTargetDeg?.toFixed(1) ?? '—'}°
                 </span>
               </div>
@@ -1231,10 +1277,11 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
             <div className="flex justify-end gap-2">
               <a
                 href={snapshotUrl}
-                download={`orbitscope-capture-${Date.now()}.png`}
-                className="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs"
+                download={`stellarscope-capture-${Date.now()}.png`}
+                className="px-4 py-2 rounded-xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-deep)] text-[var(--color-accent-ink)] font-medium text-xs flex items-center gap-1.5 transition-colors"
               >
-                💾 ดาวน์โหลดภาพ PNG
+                <Download className="w-3.5 h-3.5" />
+                <span>Download PNG</span>
               </a>
             </div>
           </div>

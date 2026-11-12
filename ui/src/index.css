@@ -16,6 +16,7 @@ body,
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
+  scroll-behavior: smooth;
 }
 
 .font-display {

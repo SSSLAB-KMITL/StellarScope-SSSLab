@@ -39,7 +39,9 @@ import {
   sunSyncInclinationDeg,
 } from './engine/orbitalEngine';
 import {
+  CelestrakGnssGroup,
   createInitialScenario,
+  fetchCelestrakGnssGroup,
   getEducationalOrbitPresets,
   OFFLINE_SATELLITE_CATALOG,
   searchCelestrakOnline,
@@ -101,7 +103,7 @@ export const App: React.FC = () => {
     let lastFrame = performance.now();
     let rafId = 0;
     const tick = (now: number) => {
-      const dtRealSec = (now - lastFrame) / 1000;
+      const dtRealSec = Math.min(0.05, Math.max(0, (now - lastFrame) / 1000));
       lastFrame = now;
       setSimTimeMs((prev) => prev + dtRealSec * timeSpeed * 1000);
       rafId = requestAnimationFrame(tick);
@@ -234,6 +236,66 @@ export const App: React.FC = () => {
     const res = await searchCelestrakOnline(catalogQuery);
     setCatalogResults(res);
     setCatalogLoading(false);
+  };
+
+  const handleLoadGnssGroup = async (group: CelestrakGnssGroup | 'offline_all') => {
+    if (group === 'offline_all') {
+      setCatalogResults(OFFLINE_SATELLITE_CATALOG);
+      return;
+    }
+    setCatalogLoading(true);
+    const res = await fetchCelestrakGnssGroup(group);
+    setCatalogResults(res);
+    setCatalogLoading(false);
+  };
+
+  const handleLoadMultiGnssStarter = () => {
+    const gnssEntries = OFFLINE_SATELLITE_CATALOG.filter((c) => c.category.startsWith('GNSS'));
+    const palette = ['#0284c7', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0d9488'];
+    const existingNames = new Set(satellites.map((s) => s.name));
+    const added: SatelliteObject[] = [];
+    gnssEntries.forEach((entry, idx) => {
+      if (existingNames.has(entry.name)) return;
+      added.push({
+        id: `sat-${entry.id}-${Date.now()}-${idx}`,
+        name: entry.name,
+        color: palette[(satellites.length + idx) % palette.length],
+        visible: true,
+        source_mode: 'tle',
+        tle_line1: entry.line1,
+        tle_line2: entry.line2,
+        keplerian: {
+          altitude_km: 20200,
+          eccentricity: 0.001,
+          inclination_deg: 55.0,
+          raan_deg: 30,
+          arg_perigee_deg: 0,
+          mean_anomaly_deg: 0,
+        },
+        epoch_iso: new Date(simTimeMs).toISOString(),
+        sensor: {
+          enabled: true,
+          fov: entry.default_sensor.fov,
+          pointing_mode: 'nadir',
+          roll_deg: 0,
+          pitch_deg: 0,
+          target_id: null,
+          max_slew_deg: entry.max_slew_deg,
+          focal_mm: entry.focal_mm,
+          pixel_um: entry.pixel_um,
+          swath_history_min: 20,
+        },
+        show_orbit: true,
+        show_ground_track: true,
+        show_footprint: false,
+        show_swath: false,
+      });
+    });
+    if (added.length > 0) {
+      setSatellites((prev) => [...prev, ...added]);
+      setSelectedSatId(added[0].id);
+    }
+    setShowCatalogModal(false);
   };
 
   const handleAddCustomTle = () => {
@@ -1614,6 +1676,40 @@ export const App: React.FC = () => {
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>{catalogLoading ? 'Searching...' : 'Search CelesTrak'}</span>
+              </button>
+            </div>
+
+            {/* GNSS Constellation Quick-Load Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(
+                  [
+                    { id: 'offline_all', label: 'All Catalog' },
+                    { id: 'gps-ops', label: 'GPS' },
+                    { id: 'glo-ops', label: 'GLONASS' },
+                    { id: 'galileo', label: 'Galileo' },
+                    { id: 'beidou', label: 'BeiDou' },
+                    { id: 'qzss', label: 'QZSS' },
+                    { id: 'gnss', label: 'All GNSS (Live)' },
+                  ] as const
+                ).map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    disabled={catalogLoading}
+                    onClick={() => handleLoadGnssGroup(g.id)}
+                    className="px-2.5 py-1 rounded-lg bg-[var(--color-paper)] hover:bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-xs font-medium text-[var(--color-ink-2)] transition-colors"
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleLoadMultiGnssStarter}
+                className="px-3 py-1 rounded-lg bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-ink)] text-[var(--color-accent-deep)] text-xs font-medium transition-colors"
+              >
+                + Load Multi-GNSS Set
               </button>
             </div>
 

@@ -138,6 +138,151 @@ export const OFFLINE_SATELLITE_CATALOG: CatalogEntry[] = [
     pixel_um: 15.0,
     max_slew_deg: 45,
   },
+  // --- GNSS Constellations (GPS, GLONASS, Galileo, BeiDou, QZSS, NavIC) ---
+  {
+    id: 'gps-biii-1',
+    name: 'GPS III SV01 (VESPUCCI)',
+    norad_id: 43873,
+    category: 'GNSS · GPS',
+    description_th: 'ดาวเทียมนำร่อง GPS รุ่นที่ 3 ของสหรัฐฯ วงโคจร MEO ~20,200 km ความเอียง 55°',
+    description_en: 'US GPS Block III navigation satellite in MEO (~20,200 km, 55° inclination)',
+    line1: '1 43873U 18109A   26316.50000000 -.00000025  00000-0  00000-0 0  9991',
+    line2: '2 43873  55.1200  42.3100 0021500 214.1200 145.8000  2.00563500 58102',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 13.8 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'gps-biir-13',
+    name: 'GPS BIIR-2 (PRN 13)',
+    norad_id: 24876,
+    category: 'GNSS · GPS',
+    description_th: 'ดาวเทียมนำร่อง GPS Block IIR ในวงโคจร MEO ระนาบที่ 2',
+    description_en: 'US GPS Block IIR navigation satellite in MEO orbital plane B',
+    line1: '1 24876U 97035A   26316.50000000 -.00000040  00000-0  00000-0 0  9994',
+    line2: '2 24876  55.4300 162.1800 0052100 112.4000 248.1000  2.00564100214502',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 13.8 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'glonass-m-760',
+    name: 'COSMOS 2545 (GLONASS-M)',
+    norad_id: 45358,
+    category: 'GNSS · GLONASS',
+    description_th: 'ดาวเทียมนำร่อง GLONASS ของรัสเซีย วงโคจร MEO ~19,100 km ความเอียง 64.8°',
+    description_en: 'Russian GLONASS-M navigation satellite in MEO (~19,100 km, 64.8° inclination)',
+    line1: '1 45358U 20018A   26316.50000000 -.00000050  00000-0  00000-0 0  9992',
+    line2: '2 45358  64.8100  95.4200 0014200 310.2000  49.8000  2.13101800 51804',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 14.2 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'galileo-26',
+    name: 'GALILEO-26 (GSAT0222)',
+    norad_id: 43567,
+    category: 'GNSS · Galileo',
+    description_th: 'ดาวเทียมนำร่อง Galileo ของสหภาพยุโรป วงโคจร MEO ~23,222 km ความเอียง 56°',
+    description_en: 'European Galileo GNSS satellite in MEO (~23,222 km, 56° inclination)',
+    line1: '1 43567U 18060D   26316.50000000 -.00000020  00000-0  00000-0 0  9997',
+    line2: '2 43567  56.0400 218.6000 0003800  45.1000 314.9000  1.70474800 51209',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 12.5 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'beidou-3-m1',
+    name: 'BEIDOU-3 M1',
+    norad_id: 43001,
+    category: 'GNSS · BeiDou',
+    description_th: 'ดาวเทียมนำร่อง BeiDou-3 ของจีน วงโคจร MEO ~21,528 km ความเอียง 55°',
+    description_en: 'Chinese BeiDou-3 MEO navigation satellite (~21,528 km, 55° inclination)',
+    line1: '1 43001U 17069A   26316.50000000 -.00000030  00000-0  00000-0 0  9995',
+    line2: '2 43001  55.0200 302.1500 0009500 185.2000 174.8000  1.86231200 61240',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 13.0 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'beidou-3-igso1',
+    name: 'BEIDOU-3 IGSO-1',
+    norad_id: 44204,
+    category: 'GNSS · BeiDou',
+    description_th: 'ดาวเทียม BeiDou-3 วงโคจรเอียงค้างฟ้า (IGSO ~35,786 km) ครอบคลุมภูมิภาคเอเชีย-แปซิฟิก',
+    description_en: 'Chinese BeiDou-3 Inclined Geosynchronous Orbit (IGSO) over Asia-Pacific',
+    line1: '1 44204U 19023A   26316.50000000 -.00000110  00000-0  00000-0 0  9993',
+    line2: '2 44204  55.1800 118.4000 0024100 202.5000 157.5000  1.00270500 27401',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 8.8 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'qzss-1r',
+    name: 'QZS-1R (MICHIBIKI-1R)',
+    norad_id: 49336,
+    category: 'GNSS · QZSS',
+    description_th: 'ดาวเทียม QZSS ของญี่ปุ่น วงโคจรเลข 8 (Tundra/IGSO) ค้างเหนือเอเชียและไทย',
+    description_en: 'Japanese QZSS Quasi-Zenith figure-8 orbit covering East Asia, ASEAN, and Oceania',
+    line1: '1 49336U 21096A   26316.50000000 -.00000140  00000-0  00000-0 0  9996',
+    line2: '2 49336  40.8500 142.3000 0752000 270.0000  89.5000  1.00269200 18420',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 9.0 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
+  {
+    id: 'navic-1i',
+    name: 'IRNSS-1I (NAVIC)',
+    norad_id: 43286,
+    category: 'GNSS · NavIC',
+    description_th: 'ดาวเทียมนำร่อง NavIC ของอินเดีย วงโคจร IGSO ~35,786 km ความเอียง 29° ครอบคลุมมหาสมุทรอินเดียและไทย',
+    description_en: 'Indian NavIC (IRNSS) regional navigation satellite in 29° IGSO over South & SE Asia',
+    line1: '1 43286U 18035A   26316.50000000 -.00000100  00000-0  00000-0 0  9998',
+    line2: '2 43286  29.1500  82.5000 0019000 180.0000 180.0000  1.00271200 31205',
+    default_sensor: {
+      fov: { type: 'conic', half_angle_deg: 8.8 },
+      roll_deg: 0,
+      pitch_deg: 0,
+    },
+    focal_mm: 200,
+    pixel_um: 10.0,
+    max_slew_deg: 15,
+  },
 ];
 
 export function getEducationalOrbitPresets(epoch: Date): OrbitPreset[] {
@@ -260,6 +405,121 @@ export function getEducationalOrbitPresets(epoch: Date): OrbitPreset[] {
       },
       focal_mm: 1000,
       pixel_um: 8.0,
+    },
+    {
+      id: 'gnss-gps-meo',
+      name_th: 'GNSS: GPS MEO (20,200 km, i=55°)',
+      name_en: 'GNSS: GPS MEO (20,200 km, 55°)',
+      description_th: 'วงโคจรมาตรฐานดาวเทียม GPS คาบโคจร 11 ชม. 58 นาที',
+      description_en: 'Standard US GPS MEO orbit (20,200 km altitude, 55° inclination, ~12h period)',
+      keplerian: {
+        altitude_km: 20200,
+        eccentricity: 0.002,
+        inclination_deg: 55.0,
+        raan_deg: 42,
+        arg_perigee_deg: 0,
+        mean_anomaly_deg: 30,
+      },
+      color: '#0284c7',
+      default_sensor: {
+        fov: { type: 'conic', half_angle_deg: 13.8 },
+        roll_deg: 0,
+        pitch_deg: 0,
+      },
+      focal_mm: 200,
+      pixel_um: 10.0,
+    },
+    {
+      id: 'gnss-glonass-meo',
+      name_th: 'GNSS: GLONASS MEO (19,100 km, i=64.8°)',
+      name_en: 'GNSS: GLONASS MEO (19,100 km, 64.8°)',
+      description_th: 'วงโคจรดาวเทียม GLONASS ความเอียงสูง 64.8° ครอบคลุมขั้วโลก',
+      description_en: 'Russian GLONASS MEO orbit (19,100 km altitude, 64.8° high-latitude inclination)',
+      keplerian: {
+        altitude_km: 19100,
+        eccentricity: 0.001,
+        inclination_deg: 64.8,
+        raan_deg: 95,
+        arg_perigee_deg: 0,
+        mean_anomaly_deg: 60,
+      },
+      color: '#e11d48',
+      default_sensor: {
+        fov: { type: 'conic', half_angle_deg: 14.2 },
+        roll_deg: 0,
+        pitch_deg: 0,
+      },
+      focal_mm: 200,
+      pixel_um: 10.0,
+    },
+    {
+      id: 'gnss-galileo-meo',
+      name_th: 'GNSS: Galileo MEO (23,222 km, i=56°)',
+      name_en: 'GNSS: Galileo MEO (23,222 km, 56°)',
+      description_th: 'วงโคจรดาวเทียม Galileo ของยุโรป ที่ความสูง 23,222 km',
+      description_en: 'European Galileo MEO orbit (23,222 km altitude, 56° inclination, ~14h period)',
+      keplerian: {
+        altitude_km: 23222,
+        eccentricity: 0.0004,
+        inclination_deg: 56.0,
+        raan_deg: 218,
+        arg_perigee_deg: 0,
+        mean_anomaly_deg: 90,
+      },
+      color: '#059669',
+      default_sensor: {
+        fov: { type: 'conic', half_angle_deg: 12.5 },
+        roll_deg: 0,
+        pitch_deg: 0,
+      },
+      focal_mm: 200,
+      pixel_um: 10.0,
+    },
+    {
+      id: 'gnss-beidou-meo',
+      name_th: 'GNSS: BeiDou-3 MEO (21,528 km, i=55°)',
+      name_en: 'GNSS: BeiDou-3 MEO (21,528 km, 55°)',
+      description_th: 'วงโคจรดาวเทียม BeiDou-3 MEO ของจีน ที่ความสูง 21,528 km',
+      description_en: 'Chinese BeiDou-3 MEO orbit (21,528 km altitude, 55° inclination)',
+      keplerian: {
+        altitude_km: 21528,
+        eccentricity: 0.001,
+        inclination_deg: 55.0,
+        raan_deg: 302,
+        arg_perigee_deg: 0,
+        mean_anomaly_deg: 120,
+      },
+      color: '#d97706',
+      default_sensor: {
+        fov: { type: 'conic', half_angle_deg: 13.0 },
+        roll_deg: 0,
+        pitch_deg: 0,
+      },
+      focal_mm: 200,
+      pixel_um: 10.0,
+    },
+    {
+      id: 'gnss-qzss-igso',
+      name_th: 'GNSS: QZSS Quasi-Zenith (35,786 km, i=41°, e=0.075)',
+      name_en: 'GNSS: QZSS Quasi-Zenith (35,786 km, 41°)',
+      description_th: 'วงโคจรเลข 8 อสมมาตรเหนือเอเชีย-ไทย ช่วยเพิ่มความแม่นยำตำแหน่งในเขตเมือง',
+      description_en: 'Japanese QZSS asymmetric figure-8 IGSO (41° inclination, e=0.075) over Asia-Oceania',
+      keplerian: {
+        altitude_km: 35786,
+        eccentricity: 0.075,
+        inclination_deg: 40.85,
+        raan_deg: 142,
+        arg_perigee_deg: 270,
+        mean_anomaly_deg: 90,
+      },
+      color: '#7c3aed',
+      default_sensor: {
+        fov: { type: 'conic', half_angle_deg: 9.0 },
+        roll_deg: 0,
+        pitch_deg: 0,
+      },
+      focal_mm: 200,
+      pixel_um: 10.0,
     },
   ];
 }
@@ -483,5 +743,69 @@ export async function searchCelestrakOnline(query: string): Promise<CatalogEntry
     return remote.length > 0 ? remote.slice(0, 25) : localMatches;
   } catch {
     return localMatches;
+  }
+}
+
+export type CelestrakGnssGroup = 'gps-ops' | 'glo-ops' | 'galileo' | 'beidou' | 'qzss' | 'gnss';
+
+function parseTleFeed(text: string, category: string): CatalogEntry[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const items: CatalogEntry[] = [];
+  for (let i = 0; i + 2 < lines.length; i += 3) {
+    if (lines[i + 1].startsWith('1 ') && lines[i + 2].startsWith('2 ')) {
+      const name = lines[i];
+      const l1 = lines[i + 1];
+      const l2 = lines[i + 2];
+      const norad = parseInt(l1.substring(2, 7).trim(), 10) || 0;
+      items.push({
+        id: `celestrak-${category}-${norad}-${i}`,
+        name,
+        norad_id: norad,
+        category,
+        description_th: `ข้อมูล TLE สดจาก CelesTrak (${category})`,
+        description_en: `Live ${category} TLE from CelesTrak (NORAD ${norad})`,
+        line1: l1,
+        line2: l2,
+        default_sensor: {
+          fov: { type: 'conic', half_angle_deg: 13.0 },
+          roll_deg: 0,
+          pitch_deg: 0,
+        },
+        focal_mm: 200,
+        pixel_um: 10.0,
+        max_slew_deg: 15,
+      });
+    }
+  }
+  return items;
+}
+
+export async function fetchCelestrakGnssGroup(group: CelestrakGnssGroup): Promise<CatalogEntry[]> {
+  const groupMap: Record<CelestrakGnssGroup, { label: string; filterKey: string }> = {
+    'gps-ops': { label: 'GNSS · GPS', filterKey: 'gps' },
+    'glo-ops': { label: 'GNSS · GLONASS', filterKey: 'glonass' },
+    galileo: { label: 'GNSS · Galileo', filterKey: 'galileo' },
+    beidou: { label: 'GNSS · BeiDou', filterKey: 'beidou' },
+    qzss: { label: 'GNSS · QZSS', filterKey: 'qzss' },
+    gnss: { label: 'GNSS', filterKey: 'gnss' },
+  };
+  const info = groupMap[group];
+  const localFallback = OFFLINE_SATELLITE_CATALOG.filter((c) =>
+    c.category.toLowerCase().includes(info.filterKey)
+  );
+  try {
+    const res = await fetch(
+      `https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=TLE`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return localFallback;
+    const text = await res.text();
+    const parsed = parseTleFeed(text, info.label);
+    return parsed.length > 0 ? parsed.slice(0, 36) : localFallback;
+  } catch {
+    return localFallback;
   }
 }

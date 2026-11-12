@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import {
@@ -99,6 +99,8 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
   const pipViewerRef = useRef<Cesium.Viewer | null>(null);
   const map2dCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const earthImgRef = useRef<HTMLImageElement | null>(null);
+  const bgCacheCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const bgCacheKeyRef = useRef<string>('');
 
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
@@ -305,6 +307,48 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
   const selectedBundle =
     satDataList.find((x) => x.sat.id === selectedSatId) || satDataList[0] || null;
 
+  // Cache 3D orbit rings & 2D ground tracks every 30s of sim time for smooth 60fps rendering
+  const orbitBucket = Math.floor(simTimeMs / 30_000);
+  const cachedTracks = useMemo(() => {
+    const bucketDate = new Date(orbitBucket * 30_000);
+    const orbit3d = new Map<string, Cesium.Cartesian3[]>();
+    const track2d = new Map<string, { lat: number; lon: number }[]>();
+
+    for (const sat of satellites) {
+      if (!sat.visible) continue;
+      const st0 = propagateSatellite(sat, bucketDate);
+      if (!st0) continue;
+      const periodSec = st0.periodMin * 60;
+
+      if (sat.show_orbit) {
+        const steps3d = 96;
+        const pts3d: Cesium.Cartesian3[] = [];
+        for (let i = 0; i <= steps3d; i++) {
+          const dt = (i / steps3d - 0.5) * periodSec;
+          const stS = propagateSatellite(sat, new Date(bucketDate.getTime() + dt * 1000));
+          if (stS) {
+            pts3d.push(kmToCartesian(temeToEcef(stS.rTeme, bucketDate)));
+          }
+        }
+        orbit3d.set(sat.id, pts3d);
+      }
+
+      if (sat.show_ground_track) {
+        const steps2d = 140;
+        const pts2d: { lat: number; lon: number }[] = [];
+        for (let i = 0; i <= steps2d; i++) {
+          const dt = (i / steps2d - 0.35) * periodSec;
+          const stS = propagateSatellite(sat, new Date(bucketDate.getTime() + dt * 1000));
+          if (stS) {
+            pts2d.push({ lat: stS.geodetic.lat, lon: stS.geodetic.lon });
+          }
+        }
+        track2d.set(sat.id, pts2d);
+      }
+    }
+    return { orbit3d, track2d };
+  }, [satellites, orbitBucket]);
+
   // Update 3D Globe Entities & Vectors on every frame
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -454,28 +498,18 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
         },
       });
 
-      // 3D Orbit Ring (Inertial ring rotated to current ECEF snapshot)
+      // 3D Orbit Ring (cached per 30s sim-time bucket for smooth 60fps)
       if (sat.show_orbit) {
-        const periodSec = state.periodMin * 60;
-        const steps = 96;
-        const orbitPositions: Cesium.Cartesian3[] = [];
-        for (let i = 0; i <= steps; i++) {
-          const dt = (i / steps - 0.5) * periodSec;
-          const tSample = new Date(simTimeMs + dt * 1000);
-          const stSample = propagateSatellite(sat, tSample);
-          if (stSample) {
-            // Display inertial ring in current ECEF frame
-            const rInCurrentEcef = temeToEcef(stSample.rTeme, currentDate);
-            orbitPositions.push(kmToCartesian(rInCurrentEcef));
-          }
+        const orbitPositions = cachedTracks.orbit3d.get(sat.id);
+        if (orbitPositions && orbitPositions.length > 1) {
+          viewer.entities.add({
+            polyline: {
+              positions: orbitPositions,
+              width: isSelected ? 2.6 : 1.5,
+              material: satColor.withAlpha(isSelected ? 0.88 : 0.45),
+            },
+          });
         }
-        viewer.entities.add({
-          polyline: {
-            positions: orbitPositions,
-            width: isSelected ? 2.6 : 1.5,
-            material: satColor.withAlpha(isSelected ? 0.88 : 0.45),
-          },
-        });
       }
 
       // 3D Sensor Cone + Ground Footprint + Swept Swath
@@ -794,60 +828,77 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
     const lonToX = (lon: number) => ((lon + 180) / 360) * w;
     const latToY = (lat: number) => ((90 - lat) / 180) * h;
 
-    // 1. Background Earth Map
-    if (earthImgRef.current) {
-      ctx.drawImage(earthImgRef.current, 0, 0, w, h);
-    } else {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, w, h);
+    // 1-3. Cached Background Earth + Solar Terminator + Grid (recomputed every 60s sim time or resize)
+    const termBucket = Math.floor(simTimeMs / 60_000);
+    const cacheKey = `${w}x${h}:${dpr}:${vectorVis.showDayNightLighting ? termBucket : 'off'}:${Boolean(earthImgRef.current)}`;
+    if (!bgCacheCanvasRef.current) {
+      bgCacheCanvasRef.current = document.createElement('canvas');
     }
+    const bgCanvas = bgCacheCanvasRef.current;
+    if (bgCacheKeyRef.current !== cacheKey) {
+      bgCanvas.width = w * dpr;
+      bgCanvas.height = h * dpr;
+      const bctx = bgCanvas.getContext('2d');
+      if (bctx) {
+        bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        bctx.imageSmoothingEnabled = true;
+        bctx.imageSmoothingQuality = 'high';
 
-    // 2. Day/Night Solar Terminator Shading
-    if (vectorVis.showDayNightLighting) {
-      const sunEcef = v3.rotZ(sunDirInertial(currentDate), -gmstRad(currentDate));
-      ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
-      const stepX = 6;
-      const stepY = 6;
-      for (let py = 0; py < h; py += stepY) {
-        const lat = (90 - (py / h) * 180) * (Math.PI / 180);
-        const cl = Math.cos(lat);
-        const sl = Math.sin(lat);
-        for (let px = 0; px < w; px += stepX) {
-          const lon = ((px / w) * 360 - 180) * (Math.PI / 180);
-          const dot =
-            sunEcef.x * cl * Math.cos(lon) +
-            sunEcef.y * cl * Math.sin(lon) +
-            sunEcef.z * sl;
-          if (dot < 0) {
-            ctx.fillRect(px, py, stepX, stepY);
+        if (earthImgRef.current) {
+          bctx.drawImage(earthImgRef.current, 0, 0, w, h);
+        } else {
+          bctx.fillStyle = '#0f172a';
+          bctx.fillRect(0, 0, w, h);
+        }
+
+        if (vectorVis.showDayNightLighting) {
+          const sunEcef = v3.rotZ(sunDirInertial(currentDate), -gmstRad(currentDate));
+          bctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
+          const stepX = 6;
+          const stepY = 6;
+          for (let py = 0; py < h; py += stepY) {
+            const lat = (90 - (py / h) * 180) * (Math.PI / 180);
+            const cl = Math.cos(lat);
+            const sl = Math.sin(lat);
+            for (let px = 0; px < w; px += stepX) {
+              const lon = ((px / w) * 360 - 180) * (Math.PI / 180);
+              const dot =
+                sunEcef.x * cl * Math.cos(lon) +
+                sunEcef.y * cl * Math.sin(lon) +
+                sunEcef.z * sl;
+              if (dot < 0) {
+                bctx.fillRect(px, py, stepX, stepY);
+              }
+            }
           }
         }
+
+        bctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+        bctx.lineWidth = 1;
+        for (let lon = -150; lon <= 150; lon += 30) {
+          const x = lonToX(lon);
+          bctx.beginPath();
+          bctx.moveTo(x, 0);
+          bctx.lineTo(x, h);
+          bctx.stroke();
+        }
+        for (let lat = -60; lat <= 60; lat += 30) {
+          const y = latToY(lat);
+          bctx.beginPath();
+          bctx.moveTo(0, y);
+          bctx.lineTo(w, y);
+          bctx.stroke();
+        }
+        bctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+        bctx.beginPath();
+        bctx.moveTo(0, latToY(0));
+        bctx.lineTo(w, latToY(0));
+        bctx.stroke();
+
+        bgCacheKeyRef.current = cacheKey;
       }
     }
-
-    // 3. Lat/Lon Grid Lines
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
-    ctx.lineWidth = 1;
-    for (let lon = -150; lon <= 150; lon += 30) {
-      const x = lonToX(lon);
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-    }
-    for (let lat = -60; lat <= 60; lat += 30) {
-      const y = latToY(lat);
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
-    }
-    // Equator highlight
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-    ctx.beginPath();
-    ctx.moveTo(0, latToY(0));
-    ctx.lineTo(w, latToY(0));
-    ctx.stroke();
+    ctx.drawImage(bgCanvas, 0, 0, w, h);
 
     // 4. Area Target Polygon & Coverage Grid on 2D Map
     if (areaTarget.vertices.length >= 3) {
@@ -923,28 +974,26 @@ export const CesiumWorkspaces: React.FC<CesiumWorkspacesProps> = ({
     for (const { sat, state, telemetry } of satDataList) {
       const isSelected = sat.id === selectedSatId;
 
-      // Ground track (-0.5 orbit to +1.0 orbit)
+      // Ground track (cached per 30s sim-time bucket)
       if (sat.show_ground_track) {
-        const periodSec = state.periodMin * 60;
-        const steps = 140;
-        ctx.strokeStyle = sat.color;
-        ctx.lineWidth = isSelected ? 2.2 : 1.3;
-        ctx.beginPath();
-        let prevLon: number | null = null;
-        for (let i = 0; i <= steps; i++) {
-          const dt = (i / steps - 0.35) * periodSec;
-          const stS = propagateSatellite(sat, new Date(simTimeMs + dt * 1000));
-          if (!stS) continue;
-          const x = lonToX(stS.geodetic.lon);
-          const y = latToY(stS.geodetic.lat);
-          if (prevLon === null || Math.abs(stS.geodetic.lon - prevLon) > 120) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
+        const pts2d = cachedTracks.track2d.get(sat.id);
+        if (pts2d && pts2d.length > 1) {
+          ctx.strokeStyle = sat.color;
+          ctx.lineWidth = isSelected ? 2.2 : 1.3;
+          ctx.beginPath();
+          let prevLon: number | null = null;
+          for (const pt of pts2d) {
+            const x = lonToX(pt.lon);
+            const y = latToY(pt.lat);
+            if (prevLon === null || Math.abs(pt.lon - prevLon) > 120) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+            prevLon = pt.lon;
           }
-          prevLon = stS.geodetic.lon;
+          ctx.stroke();
         }
-        ctx.stroke();
       }
 
       // Sensor Footprint on 2D Map

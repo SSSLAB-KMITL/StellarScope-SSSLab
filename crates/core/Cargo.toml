@@ -1,0 +1,10 @@
+[package]
+name = "orbitscope-core"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Orbit propagation, frames, sensor footprint and access computations (no UI)"
+
+[dependencies]
+sgp4.workspace = true
+chrono.workspace = true

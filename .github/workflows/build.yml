@@ -1,0 +1,84 @@
+name: build
+
+# Builds Windows (.zip with .exe) and macOS (universal .app in a .zip).
+# Run manually from the Actions tab, or push a tag like v0.1.0 to also publish a GitHub Release.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p orbitscope-core
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p orbitscope
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/release/orbitscope.exe dist/OrbitScope.exe
+          Compress-Archive -Path dist/OrbitScope.exe -DestinationPath OrbitScope-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OrbitScope-windows-x64
+          path: OrbitScope-windows-x64.zip
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p orbitscope --target aarch64-apple-darwin
+      - run: cargo build --release -p orbitscope --target x86_64-apple-darwin
+      - name: Package universal .app
+        run: |
+          APP=OrbitScope.app
+          mkdir -p $APP/Contents/MacOS
+          lipo -create \
+            target/aarch64-apple-darwin/release/orbitscope \
+            target/x86_64-apple-darwin/release/orbitscope \
+            -output $APP/Contents/MacOS/orbitscope
+          cp packaging/macos/Info.plist $APP/Contents/Info.plist
+          # ad-hoc signature so Apple Silicon will launch it (still "unidentified developer")
+          codesign --force --deep --sign - $APP
+          ditto -c -k --keepParent $APP OrbitScope-macos-universal.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OrbitScope-macos-universal
+          path: OrbitScope-macos-universal.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            OrbitScope-windows-x64.zip
+            OrbitScope-macos-universal.zip

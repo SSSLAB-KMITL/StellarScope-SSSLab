@@ -4,8 +4,6 @@
   "version": "2.0.0",
   "identifier": "org.ssslab.orbitscope",
   "build": {
-    "beforeDevCommand": "npm --prefix ../../ui run dev",
-    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm --prefix ../../ui run build",
     "frontendDist": "../../ui/dist"
   },
